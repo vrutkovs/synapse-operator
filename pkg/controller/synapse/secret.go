@@ -14,9 +14,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileSynapse) reconcileSecret(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, error) {
+func (r *ReconcileSynapse) reconcileSecret(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger, secretName string) (reconcile.Result, error) {
 	// Check if this Secret already exists
-	Secret := newSecretForCR(instance)
+	Secret := newSecretForCR(instance, secretName)
 
 	// Set Synapse instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, Secret, r.scheme); err != nil {
@@ -44,13 +44,13 @@ func (r *ReconcileSynapse) reconcileSecret(request reconcile.Request, instance *
 }
 
 // newSecretForCR returns a busybox pod with the same name/namespace as the cr
-func newSecretForCR(cr *synapsev1alpha1.Synapse) *corev1.Secret {
+func newSecretForCR(cr *synapsev1alpha1.Synapse, secretName string) *corev1.Secret {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-secret",
+			Name:      secretName,
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},

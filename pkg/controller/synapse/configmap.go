@@ -14,9 +14,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, error) {
+func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger, configMapName string) (reconcile.Result, error) {
 	// Check if this ConfigMap already exists
-	configMap := newConfigMapForCR(instance)
+	configMap := newConfigMapForCR(instance, configMapName)
 
 	// Set Synapse instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, configMap, r.scheme); err != nil {
@@ -44,13 +44,13 @@ func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instanc
 }
 
 // newConfigMapForCR returns a busybox pod with the same name/namespace as the cr
-func newConfigMapForCR(cr *synapsev1alpha1.Synapse) *corev1.ConfigMap {
+func newConfigMapForCR(cr *synapsev1alpha1.Synapse, configMapName string) *corev1.ConfigMap {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-config",
+			Name:      configMapName,
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},
