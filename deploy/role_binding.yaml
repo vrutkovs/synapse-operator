@@ -1,0 +1,11 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: synapse-operator
+subjects:
+- kind: ServiceAccount
+  name: synapse-operator
+roleRef:
+  kind: Role
+  name: synapse-operator
+  apiGroup: rbac.authorization.k8s.io
