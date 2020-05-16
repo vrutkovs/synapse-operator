@@ -92,6 +92,18 @@ func newDeploymentForCR(cr *synapsev1alpha1.Synapse, secretName, configMapName, 
 						{
 							Name:  "synapse",
 							Image: cr.Spec.Image,
+							Ports: []corev1.ContainerPort{
+								{
+									Name: "http"
+									ContainerPort: 8008,
+									Protocol: corev1.ProtocolTCP,
+								},
+								{
+									Name: "https"
+									ContainerPort: 8448,
+									Protocol: corev1.ProtocolTCP,
+								}
+							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      "config",
