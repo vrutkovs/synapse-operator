@@ -30,6 +30,69 @@ spec:
           type: object
         spec:
           description: SynapseSpec defines the desired state of Synapse
+          properties:
+            configuration:
+              description: SynapseConfig contains homeserver configuration
+              properties:
+                homeserver:
+                  type: string
+                logging:
+                  type: string
+              required:
+              - homeserver
+              - logging
+              type: object
+            secrets:
+              description: SynapseSecrets contains all secrets for synapse
+              properties:
+                config:
+                  description: SynapseSecretsConfig contains secret keys for config/
+                    dir
+                  properties:
+                    signingKey:
+                      type: string
+                    tlsCrt:
+                      type: string
+                    tlsDH:
+                      type: string
+                  required:
+                  - signingKey
+                  - tlsCrt
+                  - tlsDH
+                  type: object
+                keys:
+                  description: SynapseSecretsKeys contains secret keys for keys/ dir
+                  properties:
+                    dhParams:
+                      type: string
+                    signingKey:
+                      type: string
+                  required:
+                  - dhParams
+                  - signingKey
+                  type: object
+                tls:
+                  description: SynapseSecretsTLS contains secret keys for tls/ dir
+                  properties:
+                    tlsCrt:
+                      type: string
+                    tlsKey:
+                      type: string
+                  required:
+                  - tlsCrt
+                  - tlsKey
+                  type: object
+              required:
+              - config
+              - keys
+              - tls
+              type: object
+            serverName:
+              type: string
+          required:
+          - configuration
+          - secrets
+          - serverName
           type: object
         status:
           description: SynapseStatus defines the observed state of Synapse
