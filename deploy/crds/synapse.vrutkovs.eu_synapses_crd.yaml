@@ -36,38 +36,23 @@ spec:
               properties:
                 homeserver:
                   type: string
-                logging:
-                  type: string
               required:
               - homeserver
-              - logging
               type: object
             image:
               type: string
             secrets:
               description: SynapseSecrets contains all secrets for synapse
               properties:
-                config:
-                  description: SynapseSecretsConfig contains secret keys for config/
-                    dir
-                  properties:
-                    signingKey:
-                      type: string
-                    tlsCrt:
-                      type: string
-                  required:
-                  - signingKey
-                  - tlsCrt
-                  type: object
                 keys:
                   description: SynapseSecretsKeys contains secret keys for keys/ dir
                   properties:
-                    dhParams:
+                    logging:
                       type: string
                     signingKey:
                       type: string
                   required:
-                  - dhParams
+                  - logging
                   - signingKey
                   type: object
                 tls:
@@ -82,7 +67,6 @@ spec:
                   - key
                   type: object
               required:
-              - config
               - keys
               - tls
               type: object

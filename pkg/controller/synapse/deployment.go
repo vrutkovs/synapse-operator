@@ -49,49 +49,14 @@ func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) [
 		{
 			Name: "config",
 			VolumeSource: corev1.VolumeSource{
-				Projected: &corev1.ProjectedVolumeSource{
-					Sources: []corev1.VolumeProjection{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: configMapName,
+					},
+					Items: []corev1.KeyToPath{
 						{
-							ConfigMap: &corev1.ConfigMapProjection{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: configMapName,
-								},
-								Items: []corev1.KeyToPath{
-									{
-										Key:  "homeserver",
-										Path: "homeserver.yaml",
-									},
-									{
-										Key:  "logging",
-										Path: "log.yaml",
-									},
-								},
-							},
-						},
-						{
-							Secret: &corev1.SecretProjection{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: secretName,
-								},
-								Items: []corev1.KeyToPath{
-									{
-										Key:  "configSigningKey",
-										Path: cr.Name + ".signing.key",
-									},
-									{
-										Key:  "tlsCrt",
-										Path: cr.Name + ".tls.crt",
-									},
-									{
-										Key:  "dhParams",
-										Path: cr.Name + ".tls.dh",
-									},
-									{
-										Key:  "key",
-										Path: cr.Name + ".tls.key",
-									},
-								},
-							},
+							Key:  "homeserver",
+							Path: "homeserver.yaml",
 						},
 					},
 				},
@@ -122,12 +87,12 @@ func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) [
 					SecretName: secretName,
 					Items: []corev1.KeyToPath{
 						{
-							Key:  "dhParams",
-							Path: "dhparams.pem",
+							Key:  "logging",
+							Path: cr.Spec.ServerName + ".log.config",
 						},
 						{
 							Key:  "tlsSigningKey",
-							Path: "signing.key",
+							Path: cr.Spec.ServerName + ".signing.key",
 						},
 					},
 				},

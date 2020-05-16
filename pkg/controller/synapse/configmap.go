@@ -56,7 +56,6 @@ func newConfigMapForCR(cr *synapsev1alpha1.Synapse, configMapName string) *corev
 		},
 		Data: map[string]string{
 			"homeserver": cr.Spec.Config.Homeserver,
-			"logging":    cr.Spec.Config.Logging,
 		},
 	}
 }

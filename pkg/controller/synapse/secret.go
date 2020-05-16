@@ -55,12 +55,10 @@ func newSecretForCR(cr *synapsev1alpha1.Synapse, secretName string) *corev1.Secr
 			Labels:    labels,
 		},
 		Data: map[string][]byte{
-			"configSigningKey": []byte(cr.Spec.Secrets.Config.SigningKey),
-			"tlsCrt":           []byte(cr.Spec.Secrets.Config.TLSCert),
-			"cert":             []byte(cr.Spec.Secrets.TLS.Cert),
-			"key":              []byte(cr.Spec.Secrets.TLS.Key),
-			"dhParams":         []byte(cr.Spec.Secrets.Keys.DHParams),
-			"tlsSigningKey":    []byte(cr.Spec.Secrets.Keys.SigningKey),
+			"cert":          []byte(cr.Spec.Secrets.TLS.Cert),
+			"key":           []byte(cr.Spec.Secrets.TLS.Key),
+			"logging":       []byte(cr.Spec.Secrets.Keys.Logging),
+			"tlsSigningKey": []byte(cr.Spec.Secrets.Keys.SigningKey),
 		},
 	}
 }
