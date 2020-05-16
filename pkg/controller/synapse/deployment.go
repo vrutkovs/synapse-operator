@@ -133,6 +133,12 @@ func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) [
 				},
 			},
 		},
+		{
+			Name: "mediastore",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
 	}
 }
 
@@ -149,6 +155,10 @@ func getVolumeMounts() []corev1.VolumeMount {
 		{
 			Name:      "keys",
 			MountPath: "/synapse/keys",
+		},
+		{
+			Name:      "mediastore",
+			MountPath: "/media_store",
 		},
 	}
 }
