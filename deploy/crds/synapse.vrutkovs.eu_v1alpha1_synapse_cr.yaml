@@ -3,7 +3,7 @@ kind: Synapse
 metadata:
   name: example-synapse
 spec:
-  image: ananace/matrix-synapse:0.25.1
+  image: docker.io/ananace/matrix-synapse:0.25.1
   serverName: matrix.vrutkovs.eu
   configuration:
     homeserver: |
