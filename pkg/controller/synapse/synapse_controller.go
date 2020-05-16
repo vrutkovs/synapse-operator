@@ -116,7 +116,7 @@ func (r *ReconcileSynapse) Reconcile(request reconcile.Request) (reconcile.Resul
 		return result, err
 	}
 
-	result, err = r.reconcileDeployment(request, instance, reqLogger, deploymentName, secretName, configMapName)
+	result, err = r.reconcileDeployment(request, instance, reqLogger, secretName, configMapName, deploymentName)
 	if err != nil {
 		return result, err
 	}
