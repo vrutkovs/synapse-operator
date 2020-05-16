@@ -38,6 +38,7 @@ type SynapseSecrets struct {
 
 // SynapseSpec defines the desired state of Synapse
 type SynapseSpec struct {
+	Image      string         `json:"image"`
 	ServerName string         `json:"serverName"`
 	Config     SynapseConfig  `json:"configuration"`
 	Secrets    SynapseSecrets `json:"secrets"`
