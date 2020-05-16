@@ -4,21 +4,47 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// SynapseConfig contains homeserver configuration
+type SynapseConfig struct {
+	Homeserver string `json:"homeserver"`
+	Logging    string `json:"logging"`
+}
+
+// SynapseSecretsConfig contains secret keys for config/ dir
+type SynapseSecretsConfig struct {
+	SigningKey string `json:"signingKey"`
+	TLSCert    string `json:"tlsCrt"`
+	TLSDH      string `json:"tlsDH"`
+}
+
+// SynapseSecretsTLS contains secret keys for tls/ dir
+type SynapseSecretsTLS struct {
+	TLSCert string `json:"tlsCrt"`
+	TLSKey  string `json:"tlsKey"`
+}
+
+// SynapseSecretsKeys contains secret keys for keys/ dir
+type SynapseSecretsKeys struct {
+	DHParams   string `json:"dhParams"`
+	SigningKey string `json:"signingKey"`
+}
+
+// SynapseSecrets contains all secrets for synapse
+type SynapseSecrets struct {
+	Config SynapseSecretsConfig `json:"config"`
+	TLS    SynapseSecretsTLS    `json:"tls"`
+	Keys   SynapseSecretsKeys   `json:"keys"`
+}
 
 // SynapseSpec defines the desired state of Synapse
 type SynapseSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+	ServerName string         `json:"serverName"`
+	Config     SynapseConfig  `json:"configuration"`
+	Secrets    SynapseSecrets `json:"secrets"`
 }
 
 // SynapseStatus defines the observed state of Synapse
 type SynapseStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
