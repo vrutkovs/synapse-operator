@@ -1,0 +1,7 @@
+apiVersion: synapse.vrutkovs.eu/v1alpha1
+kind: Synapse
+metadata:
+  name: example-synapse
+spec:
+  # Add fields here
+  size: 3
