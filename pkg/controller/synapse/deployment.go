@@ -44,6 +44,115 @@ func (r *ReconcileSynapse) reconcileDeployment(request reconcile.Request, instan
 	return reconcile.Result{}, nil
 }
 
+func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) []corev1.Volume {
+	return []corev1.Volume{
+		{
+			Name: "config",
+			VolumeSource: corev1.VolumeSource{
+				Projected: &corev1.ProjectedVolumeSource{
+					Sources: []corev1.VolumeProjection{
+						{
+							ConfigMap: &corev1.ConfigMapProjection{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: configMapName,
+								},
+								Items: []corev1.KeyToPath{
+									{
+										Key:  "homeserver",
+										Path: "homeserver.yaml",
+									},
+									{
+										Key:  "logging",
+										Path: "log.yaml",
+									},
+								},
+							},
+						},
+						{
+							Secret: &corev1.SecretProjection{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: secretName,
+								},
+								Items: []corev1.KeyToPath{
+									{
+										Key:  "configSigningKey",
+										Path: cr.Name + ".signing.key",
+									},
+									{
+										Key:  "tlsCrt",
+										Path: cr.Name + ".tls.crt",
+									},
+									{
+										Key:  "dhParams",
+										Path: cr.Name + ".tls.dh",
+									},
+									{
+										Key:  "key",
+										Path: cr.Name + ".tls.key",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "tls",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: secretName,
+					Items: []corev1.KeyToPath{
+						{
+							Key:  "cert",
+							Path: "tls.crt",
+						},
+						{
+							Key:  "key",
+							Path: "tls.key",
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "keys",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: secretName,
+					Items: []corev1.KeyToPath{
+						{
+							Key:  "dhParams",
+							Path: "dhparams.pem",
+						},
+						{
+							Key:  "tlsSigningKey",
+							Path: "signing.key",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func getVolumeMounts() []corev1.VolumeMount {
+	return []corev1.VolumeMount{
+		{
+			Name:      "config",
+			MountPath: "/synapse/config",
+		},
+		{
+			Name:      "tls",
+			MountPath: "/synapse/tls",
+		},
+		{
+			Name:      "keys",
+			MountPath: "/synapse/keys",
+		},
+	}
+}
+
 // newDeploymentForCR returns a busybox pod with the same name/namespace as the cr
 func newDeploymentForCR(cr *synapsev1alpha1.Synapse, secretName, configMapName, deploymentName string) *appsv1.Deployment {
 	labels := map[string]string{
@@ -68,94 +177,24 @@ func newDeploymentForCR(cr *synapsev1alpha1.Synapse, secretName, configMapName, 
 					Labels:    labels,
 				},
 				Spec: corev1.PodSpec{
-					Volumes: []corev1.Volume{
-						{
-							Name: "config",
-							VolumeSource: corev1.VolumeSource{
-								ConfigMap: &corev1.ConfigMapVolumeSource{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: configMapName,
-									},
-								},
-							},
-						},
-						{
-							Name: "secrets",
-							VolumeSource: corev1.VolumeSource{
-								Secret: &corev1.SecretVolumeSource{
-									SecretName: secretName,
-								},
-							},
-						},
-					},
+					Volumes: getVolumes(cr, configMapName, secretName),
 					Containers: []corev1.Container{
 						{
 							Name:  "synapse",
 							Image: cr.Spec.Image,
 							Ports: []corev1.ContainerPort{
 								{
-									Name: "http"
+									Name:          "http",
 									ContainerPort: 8008,
-									Protocol: corev1.ProtocolTCP,
+									Protocol:      corev1.ProtocolTCP,
 								},
 								{
-									Name: "https"
+									Name:          "https",
 									ContainerPort: 8448,
-									Protocol: corev1.ProtocolTCP,
-								}
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      "config",
-									MountPath: "/synapse/config/homeserver.yaml",
-									SubPath:   "homeserver",
-								},
-								{
-									Name:      "config",
-									MountPath: "/synapse/config/log.yaml",
-									SubPath:   "logging",
-								},
-								{
-									Name:      "secrets",
-									MountPath: "/synapse/config/" + cr.Spec.ServerName + ".signing.key",
-									SubPath:   "configSigningKey",
-								},
-								{
-									Name:      "secrets",
-									MountPath: "/synapse/config/" + cr.Spec.ServerName + ".tls.crt",
-									SubPath:   "tlsCrt",
-								},
-								{
-									Name:      "secrets",
-									MountPath: "/synapse/config/" + cr.Spec.ServerName + ".tls.key",
-									SubPath:   "key",
-								},
-								{
-									Name:      "secrets",
-									MountPath: "/synapse/config/" + cr.Spec.ServerName + ".tls.dh",
-									SubPath:   "dhParams",
-								},
-								{
-									Name:      "secrets",
-									MountPath: "/synapse/tls/tls.crt",
-									SubPath:   "cert",
-								},
-								{
-									Name:      "secrets",
-									MountPath: "/synapse/tls/tls.key",
-									SubPath:   "key",
-								},
-								{
-									Name:      "secrets",
-									MountPath: "/synapse/keys/dhparams.key",
-									SubPath:   "dhParams",
-								},
-								{
-									Name:      "secrets",
-									MountPath: "/synapse/keys/signing.key",
-									SubPath:   "tlsSigningKey",
+									Protocol:      corev1.ProtocolTCP,
 								},
 							},
+							VolumeMounts: getVolumeMounts(),
 						},
 					},
 				},
