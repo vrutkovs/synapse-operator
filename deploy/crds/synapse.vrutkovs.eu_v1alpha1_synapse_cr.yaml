@@ -5,7 +5,7 @@ metadata:
 spec:
   image: ananace/matrix-synapse:0.25.1
   serverName: matrix.vrutkovs.eu
-  config:
+  configuration:
     homeserver: |
       # vim:ft=yaml
       # PEM encoded X509 certificate for TLS.
