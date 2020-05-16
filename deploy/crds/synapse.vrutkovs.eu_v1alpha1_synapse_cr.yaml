@@ -3,5 +3,154 @@ kind: Synapse
 metadata:
   name: example-synapse
 spec:
-  # Add fields here
-  size: 3
+  image: ananace/matrix-synapse:0.25.1
+  serverName: matrix.vrutkovs.eu
+  config:
+    homeserver: |
+      # vim:ft=yaml
+      # PEM encoded X509 certificate for TLS.
+      # You can replace the self-signed certificate that synapse
+      # autogenerates on launch with your own SSL certificate + key pair
+      # if you like.  Any required intermediary certificates can be
+      # appended after the primary certificate in hierarchical order.
+      tls_certificate_path: "/synapse/tls/tls.crt"
+
+      # PEM encoded private key for TLS
+      tls_private_key_path: "/synapse/tls/tls.key"
+
+      # PEM dh parameters for ephemeral keys
+      tls_dh_params_path: "/synapse/keys/dhparams.pem"
+
+      # Don't bind to the https port
+      no_tls: False
+    logging: |
+      version: 1
+      formatters:
+        precise:
+        format: '%(asctime)s - %(name)s - %(lineno)d - %(levelname)s - %(request)s- %(message)s'
+      filters:
+        context:
+          (): synapse.util.logcontext.LoggingContextFilter
+          request: ""
+      handlers:
+        console:
+          class: logging.StreamHandler
+          formatter: precise
+          filters: [context]
+          level: INFO
+      loggers:
+          synapse:
+              level: INFO
+      root:
+          level: INFO
+          handlers: [console]
+  secrets:
+    config:
+      signingKey: "ed25519 a_TkFk QNcfQW573+ynckrQUwYUefBFVJ91sOzUzud4qCRk9KU"
+      tlsCrt: |
+        -----BEGIN CERTIFICATE-----
+        MIICnzCCAYcCAgPoMA0GCSqGSIb3DQEBCwUAMBUxEzARBgNVBAMMCmhzLmV4YW1w
+        bGUwHhcNMjAwNTE2MTcxMDI2WhcNMzAwNTE0MTcxMDI2WjAVMRMwEQYDVQQDDApo
+        cy5leGFtcGxlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6KvLOFeR
+        Y+ZG2YrTsZ3fhfLFVGoEBvStTe1N0/eOgPk7h84b/MCVNtuOnuYVOi1mmTLaYJB+
+        Pc9FUGzdv+mJbVlEkZJLy7ipt8AAU4o0O1e+MyW/II2TrXEgAV03fEIiYKdsstCb
+        BOGdHPsBRkov/VXtV2ajF78VFunZ0FvDjtGbfFUvRqGvlLfidFBzx95YZcokWFAn
+        uRHAnPakyNM6zDKSPQxbPzrKCZ+5dNMb+kpNMI7+iCGpXskDXnHkC9X31xCq9OVw
+        ci0w7sMK8SJJZFbcyF5Y+ROrWEpno4rYsUtwRgNRIqH719rzl5mVywSpzqeoJQFd
+        VCt+qyzMeIy5dwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQAclFuWxFvr2nEPnvgx
+        cbEzjv32x4BbdfJ4xcgXNybN9OMdSkNm00YOTNE+f4dexlfVuVO9W/sFi/AvfwCz
+        XvWFw51PELFmRDZV1K94w+z4bYsJrlEbH2kGdmlQLan4Y05ea6CmazVqBmTvWP+I
+        QaP4xzl2mJYcaN9WT3R9TkSSxjaMXq/MmAdyTM4NZdrdZM71Q9rMlfFTmdzrAcSH
+        f4dQbFlDFZLgr5BpYHh0VC7Ee8Mn4jCJoEzSANQIxANdMTxfowiYou7LEDvtMCgx
+        bhY9kZyFwdykgt77c5dxJ+b3C7Bj0vwl984pdJsLB7FiLcpm0hG9OxgLRtIaUAuM
+        HqBr
+        -----END CERTIFICATE-----
+      tlsKey: |
+        -----BEGIN PRIVATE KEY-----
+        MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDoq8s4V5Fj5kbZ
+        itOxnd+F8sVUagQG9K1N7U3T946A+TuHzhv8wJU2246e5hU6LWaZMtpgkH49z0VQ
+        bN2/6YltWUSRkkvLuKm3wABTijQ7V74zJb8gjZOtcSABXTd8QiJgp2yy0JsE4Z0c
+        +wFGSi/9Ve1XZqMXvxUW6dnQW8OO0Zt8VS9Goa+Ut+J0UHPH3lhlyiRYUCe5EcCc
+        9qTI0zrMMpI9DFs/OsoJn7l00xv6Sk0wjv6IIaleyQNeceQL1ffXEKr05XByLTDu
+        wwrxIklkVtzIXlj5E6tYSmejitixS3BGA1EiofvX2vOXmZXLBKnOp6glAV1UK36r
+        LMx4jLl3AgMBAAECggEBAKT+Pkwj/NwEzjUyN1B7DaklMT3dOCHenI7oOwqXQJzB
+        IK/7PumLf8S5CXgw3Ni2nU0CPM3BaWRXeWXA7bdL2sKKTQ+V2N4Mg33kT9bt6IA0
+        hpIqsFBbVV/nGrUc713UYCB+WZysRWG+w/VrIcpAjatupbIW/Iy4WjI3ftg8Wn8J
+        Vq0l5Pi5VpSeJq/jxq6hXvZRkKlh7NWrq8m4426qEt1QCTTrnji6id1+OY5wil8Q
+        6CgDlwyZclTUc/RevbjSF59rt1f+sqiPN6V7F3+Id5G1djCVEA/9U5l6WQ+yORgM
+        +rPANLmKunvnlnTpqGkCuzWsHl+nhBEwc+eEtcbTyEECgYEA+RhPqx/SYE71Egpn
+        RGWSGLr4G+Su+NNTI9hVy4zhQgR9/nMh5UDAq34JE2yp6aMVsGJjGnGSZOZakdLx
+        smzyXrylvOoKzKOSH8flvUNiKJpAj9dqsYi9g+qcdK+oocRGxJzNzg62ZFnD09M2
+        FK+IuSQ+0t9RB6GEc4swFBEVhecCgYEA7x7ubJJurFJTx0qey7Yzze4syPHpy2JG
+        59RjyVbXF9cUfNikFB4t9MTamFhf4VA8XJf93hJke9FgrdjTG0qy5p7xm36ICt/W
+        PNogqp0rlLr8/sl4pYyThT546SAWYuSRX9l9vH0DfMBB7D0AT9Bi9qrrg/Un4XzS
+        Lf5fBzMdnfECgYEArpJ1My7oF4r+ghg8a1jr3N0cCSBp6ATinZp99lvTepr/WhaC
+        SNLqtMVtwulC43TiPG2Xmu7BdGlkTBKURUHJUs/PL+iujOCOBivoPI4++smwOZ71
+        LVrxxsPjxntdKZIPLrfeHG1/MjEe5xN9MV4b6fUW+l57wWdXFksT9NxMQz0CgYBF
+        WnNMiiwPTtF9u+bSrsXXtHzIy2FD2/00wCUxAD7iaz9F9o+gRiCOHYpJJVipwNvA
+        /1RiVHNQdinUQk74W3IH8ZGhx9EtVj6M57cRxQQe3x0ByO11FpCy1Ku88dGMXT7M
+        zgfp41hflmOIYSj1/Tq20Fv+qdwnSkyriluFew3cAQKBgDM8LM04Yx3MNlCkXImQ
+        E47ZXSN2wAYjt66pQIJM8D4i1cdtI7d0yMHcOJVAlnmFfZzZ+NzAn9GHKzkSAKtX
+        +mcIS3hqRV3R4S0Rtp9CpWsO5i1CaTusQsCsGuxeMu4QiTMLYvQLaN11U4ynYZ31
+        pruVa8V3mVNCntHsRi2qpdIi
+        -----END PRIVATE KEY-----
+    tls:
+      cert: |
+        -----BEGIN CERTIFICATE-----
+        MIICnzCCAYcCAgPoMA0GCSqGSIb3DQEBCwUAMBUxEzARBgNVBAMMCmhzLmV4YW1w
+        bGUwHhcNMjAwNTE2MTcxMzAwWhcNMzAwNTE0MTcxMzAwWjAVMRMwEQYDVQQDDApo
+        cy5leGFtcGxlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApaFoK+zZ
+        Tr0cjv9bPRIPSlZnsNaLY7e7Fvho220UJtFIBxEB2ncdZVvf1fRw58v2Gm8B2cLE
+        a8Ft/4pS10inhRp7zSNEs8Gg5GHNJ8n2U17LG9JX8TxC1GJRV38WdAF03qZdqAZN
+        fMPwMgC/aDUtzCIA5ZzepzHZ0ycgt/3nSpzo3bvTopDepFdrI6a3qffCFRzxNeYZ
+        yIZqCPICiKl5YJqVmXUqCiweSL4o0zJGUNzZ7+jHgfpipaVjpqEu1yDEyBvM/JVA
+        XhZfjBFaSQNUk4qeV1W0ta6umMSgDhlP47cLgEGG225DEQP/JFWwTLdoS2sVeFPN
+        1j8+GV/2yYFV3QIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQCk+9NNXQT9iG528oUP
+        XwZlSg6CobVTL/gGrEQitoAISjpUwKoBwETqL0PvggIUib+4GeBdQzY5+PJPQskd
+        SIuT/WtFQkHhRX2N8jeq4knDFzrDExXQV0wTltq8Xb2V1fPxkLkst2rku78760ul
+        qgtRHC8Irs8kBnU9XHJKpqwH3bwhPT3kuN4FPXmni9fU0L0J6fqBhaiRoUNWhLF4
+        plKd5K/CXUyOKe3AeP/0mfSQoo8M47z/ALNQd8qAdtaX0h58ljzgCkEGcpfNDdn/
+        FLCQ6bfpvcXDINgk1+uGBgraIyFm87fc54Crh1CDLTOdg/OLNVnefrnceisY12uP
+        FvdF
+        -----END CERTIFICATE-----
+      key: |
+        -----BEGIN PRIVATE KEY-----
+        MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCloWgr7NlOvRyO
+        /1s9Eg9KVmew1otjt7sW+GjbbRQm0UgHEQHadx1lW9/V9HDny/YabwHZwsRrwW3/
+        ilLXSKeFGnvNI0SzwaDkYc0nyfZTXssb0lfxPELUYlFXfxZ0AXTepl2oBk18w/Ay
+        AL9oNS3MIgDlnN6nMdnTJyC3/edKnOjdu9OikN6kV2sjprep98IVHPE15hnIhmoI
+        8gKIqXlgmpWZdSoKLB5IvijTMkZQ3Nnv6MeB+mKlpWOmoS7XIMTIG8z8lUBeFl+M
+        EVpJA1STip5XVbS1rq6YxKAOGU/jtwuAQYbbbkMRA/8kVbBMt2hLaxV4U83WPz4Z
+        X/bJgVXdAgMBAAECggEAcO8jZn/ylBuiM2auQW/k+Rz9SrifBnkqmjj61lMD4Ivm
+        ftr71ohNhOUmNG6d5Y9O2StDqcWBxK95XzpjzeL+RmWOcItRtveZyt9c0XqF+Maz
+        2t6LlDMwpjv7lptTJfowQ/hP99eEUkQPrSiRWm6YMY4l6moR7xKwoacWSh5X7KkD
+        MCzJZi6vGZ6tSD5nGOPHr9tMrVdymQzFrri+REmUGWjE+T1h7iNdt+RabRm7slLj
+        K5kQSn4Py0QMG34AKC/rYuT8Q+MHXdUxTVGJ3CcBgzspQOj9rE7Y8te4BhVVcpep
+        I1EnpkcF16rEH3nvTfW2HphbBo9w8G+0N/fMfvSaCQKBgQDcdbTu1mPIkIzZq/f8
+        SfJRXy3f8ru/SDLUZ8iolbaFJt01VjsBPPwhJhVmPhbJ4lMU6XiO8eeTOnOKKfOs
+        LkZEQvGXAJsV8JqNud37qXt9jyciyYvnzXedIbN2M0ZTzBsiar9xs5XAgCOklm49
+        q4pfwMUDa/CwbQjMiVpR09jOOwKBgQDAVOpjrMUfeI1DpC+odmG3rpKFMw4fPTME
+        dolN3d4iEt7C+3oTSWG9NJzyAlU9afmCHuY2mDfIXVfesQQcIn/xTi1X+XAJIGeC
+        kKhbk8IyL1b6vuULJkRl13IUVpsNARaXBKbytJyNEZbI7NqcUyp3ZLKwCKNH8VmF
+        /lwf6HyyxwKBgGbKZxNZWOsiIto3KYgzfk1cgIpDpjB43GJXBaM9Mv4AcfG1hAt+
+        wNw/4ohqeLum0DAW78ROnDf0b/zCtL/aT57yS6ypdqYTKizctdjqXA7eGVRJ/vaU
+        wam9Fe0N2UOnDhvNA/hi0HcSCAxsq3gLrJgazIFc6buJCyo6/KbcjOETAoGBAK9N
+        No4/LTSwFmHuxpmPvSVEcrwBev+yMkwBFsjoTs1T0cJ6oBvwKKvhxqM2ySa+7vJQ
+        45gjScTQf4S0Z4CVWXRBw0aKTjmjVXVGEI3XsYs4ZtkJIY72BCWnJ42uGojR0xs2
+        3EwfnwldXMgqSl9t1ikYmV2lod2y99wPqTxUFUSFAoGACUBkP7fGqqK3YLiNIxJ/
+        TxBtGXXO+1hFy5DZeJa+4iK3oqnYgJr5rtPR8LIfNANILsPvknXoO/7zUR/d6ZnG
+        tcrO9LSlzOZolYK81V29cozf715QRtJFylUNuzZzy6b9bbPBr1yYQzDn01tGa1wk
+        neVXXMiEBz3yL2xRpWlxcS4=
+        -----END PRIVATE KEY-----
+    keys:
+      dhParams: |
+        2048-bit DH parameters taken from rfc3526
+        -----BEGIN DH PARAMETERS-----
+        MIIBCAKCAQEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb
+        IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft
+        awv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXT
+        mmkWP6j9JM9fg2VdI9yjrZYcYvNWIIVSu57VKQdwlpZtZww1Tkq8mATxdGwIyhgh
+        fDKQXkYuNs474553LBgOhgObJ4Oi7Aeij7XFXfBvTFLJ3ivL9pVYFxg5lUl86pVq
+        5RXSJhiY+gUQFXKOWoqsqmj//////////wIBAg==
+        -----END DH PARAMETERS-----
+      signingKey: "ed25519 a_xxGM lIEH+RnSC5W80RoPQZPsjguFxxMs58pC5bsjbTJAB0w"
