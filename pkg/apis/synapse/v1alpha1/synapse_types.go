@@ -19,8 +19,8 @@ type SynapseSecretsConfig struct {
 
 // SynapseSecretsTLS contains secret keys for tls/ dir
 type SynapseSecretsTLS struct {
-	TLSCert string `json:"tlsCrt"`
-	TLSKey  string `json:"tlsKey"`
+	Cert string `json:"cert"`
+	Key  string `json:"key"`
 }
 
 // SynapseSecretsKeys contains secret keys for keys/ dir
