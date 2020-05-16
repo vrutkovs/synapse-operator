@@ -7,12 +7,9 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -105,67 +102,19 @@ func (r *ReconcileSynapse) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
-	// Define a new  object
-	deployment := newDeploymentForCR(instance)
-
-	// Set Synapse instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, deployment, r.scheme); err != nil {
-		return reconcile.Result{}, err
+	result, err := r.reconcileSecret(request, instance, reqLogger)
+	if err != nil {
+		return result, err
 	}
 
-	// Check if this Deployment already exists
-	found := &appsv1.Deployment{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
-		err = r.client.Create(context.TODO(), deployment)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
+	result, err = r.reconcileConfigMap(request, instance, reqLogger)
+	if err != nil {
+		return result, err
 	}
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Deployment already exists", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
+	result, err = r.reconcileDeployment(request, instance, reqLogger)
+	if err != nil {
+		return result, err
+	}
 	return reconcile.Result{}, nil
-}
-
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newDeploymentForCR(cr *synapsev1alpha1.Synapse) *appsv1.Deployment {
-	labels := map[string]string{
-		"app": cr.Name,
-	}
-	replicas := int32(1)
-	return &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-deployment",
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: &replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      cr.Name + "-pod",
-					Namespace: cr.Namespace,
-					Labels:    labels,
-				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "synapse",
-							Image: cr.Spec.Image,
-						},
-					},
-				},
-			},
-		},
-	}
 }
