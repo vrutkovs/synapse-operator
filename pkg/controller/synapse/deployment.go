@@ -160,7 +160,15 @@ func (r *ReconcileSynapse) forceDeploymentRollout(request reconcile.Request, ins
 
 }
 
-func getVolumes(cr *synapsev1alpha1.Synapse) []corev1.Volume {
+func getUserVolumes(cr *synapsev1alpha1.Synapse) []corev1.Volume {
+	volumes := []corev1.Volume{}
+	for _, volume := range cr.Spec.Config.Volumes {
+		volumes = append(volumes, volume.Volume)
+	}
+	return volumes
+}
+
+func getSecretAndConfigVolumes(cr *synapsev1alpha1.Synapse) []corev1.Volume {
 	mode := int32(420)
 	return []corev1.Volume{
 		{
@@ -207,16 +215,14 @@ func getVolumes(cr *synapsev1alpha1.Synapse) []corev1.Volume {
 				},
 			},
 		},
-		{
-			Name: "mediastore",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
 	}
 }
 
-func getVolumeMounts() []corev1.VolumeMount {
+func getVolumes(cr *synapsev1alpha1.Synapse) []corev1.Volume {
+	return append(getSecretAndConfigVolumes(cr), getUserVolumes(cr)...)
+}
+
+func getSecretsVolumeMounts() []corev1.VolumeMount {
 	return []corev1.VolumeMount{
 		{
 			Name:      "config",
@@ -226,11 +232,19 @@ func getVolumeMounts() []corev1.VolumeMount {
 			Name:      "keys",
 			MountPath: "/synapse/keys",
 		},
-		{
-			Name:      "mediastore",
-			MountPath: "/media_store",
-		},
 	}
+}
+
+func getUserVolumeMounts(cr *synapsev1alpha1.Synapse) []corev1.VolumeMount {
+	volumeMounts := []corev1.VolumeMount{}
+	for _, volume := range cr.Spec.Config.Volumes {
+		volumeMounts = append(volumeMounts, volume.Mount)
+	}
+	return volumeMounts
+}
+
+func getVolumeMounts(cr *synapsev1alpha1.Synapse) []corev1.VolumeMount {
+	return append(getSecretsVolumeMounts(), getUserVolumeMounts(cr)...)
 }
 
 func getDefaultProbe() *corev1.Probe {
@@ -307,7 +321,7 @@ func getExpectedDeploymentSpec(cr *synapsev1alpha1.Synapse) appsv1.DeploymentSpe
 						ReadinessProbe: &readinessProbe,
 						LivenessProbe:  &livenessProbe,
 						Ports:          getContainerPorts(),
-						VolumeMounts:   getVolumeMounts(),
+						VolumeMounts:   getVolumeMounts(cr),
 					},
 				},
 			},

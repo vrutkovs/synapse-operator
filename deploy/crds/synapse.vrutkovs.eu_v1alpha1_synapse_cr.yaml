@@ -6,6 +6,19 @@ spec:
   image: docker.io/ananace/matrix-synapse:1.12.4
   serverName: matrix.apps.vrutkovs1.origin-gce.dev.openshift.com
   configuration:
+    volumes:
+    - volume:
+        name: db
+        emptyDir: {}
+      mount:
+        name: db
+        mountPath: /db
+    - volume:
+        name: media
+        emptyDir: {}
+      mount:
+        name: media
+        mountPath: "/media_store"
     homeserver: |
       server_name: "matrix.apps.vrutkovs1.origin-gce.dev.openshift.com"
       pid_file: /tmp/homeserver.pid
@@ -32,7 +45,7 @@ spec:
       database:
         name: "sqlite3"
         args:
-          database: "/tmp/homeserver.db"
+          database: "/db/homeserver.db"
       log_config: "/synapse/config/matrix.apps.vrutkovs1.origin-gce.dev.openshift.com.log.config"
       media_store_path: "/media_store"
       report_stats: true

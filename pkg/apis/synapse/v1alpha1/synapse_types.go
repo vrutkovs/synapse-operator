@@ -1,13 +1,21 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // SynapseConfig contains homeserver configuration
 type SynapseConfig struct {
-	Homeserver string `json:"homeserver"`
-	Logging    string `json:"logging"`
+	Homeserver string          `json:"homeserver"`
+	Logging    string          `json:"logging"`
+	Volumes    []SynapseVolume `json:"volumes"`
+}
+
+// SynapseVolume defines a volume to be mounted in the synapse container
+type SynapseVolume struct {
+	Volume corev1.Volume      `json:"volume"`
+	Mount  corev1.VolumeMount `json:"mount"`
 }
 
 // SynapseSecrets contains all secrets for synapse
