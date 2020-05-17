@@ -35,13 +35,13 @@ spec:
           database: "/tmp/homeserver.db"
       log_config: "/synapse/config/matrix.vrutkovs.eu.log.config"
       media_store_path: "/media_store"
-      registration_shared_secret: "JJ_F7HVf=ZcLuvrr~DX9kmU2p-EKzW5SY0_o4&m*xAmp,.K4wh"
       report_stats: true
-      macaroon_secret_key: "#&TfL^HWZj&FnEHj-K^_ZzwgTH#geS6K&6_GcuYw7E.kQ*A2,f"
-      form_secret: "S4-r@@VVIde5Mcly55xYB8orvd8QlMXVBEs0ia8v#ZKuKm5^Df"
       signing_key_path: "/synapse/keys/matrix.vrutkovs.eu.signing.key"
       trusted_key_servers:
         - server_name: "matrix.org"
+      macaroon_secret_key: "bar"
+      form_secret: "baz"
+      registration_shared_secret: "foo"
     logging: |
       version: 1
       formatters:
