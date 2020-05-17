@@ -1364,6 +1364,20 @@ spec:
               type: object
             image:
               type: string
+            ports:
+              description: SynapsePorts contains configuration for synapse ports
+              properties:
+                federation:
+                  type: integer
+                http:
+                  type: integer
+                https:
+                  type: integer
+              required:
+              - federation
+              - http
+              - https
+              type: object
             secrets:
               description: SynapseSecrets contains all secrets for synapse
               properties:
@@ -1383,6 +1397,7 @@ spec:
           required:
           - configuration
           - image
+          - ports
           - secrets
           - serverName
           type: object

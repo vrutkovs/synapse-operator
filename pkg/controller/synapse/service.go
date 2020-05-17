@@ -72,13 +72,19 @@ func getExpectedServiceSpec(cr *synapsev1alpha1.Synapse) corev1.ServiceSpec {
 				Name:       "http",
 				Protocol:   corev1.ProtocolTCP,
 				TargetPort: intstr.IntOrString{Type: intstr.String, StrVal: "http"},
-				Port:       8008,
+				Port:       int32(cr.Spec.Ports.HTTP),
 			},
 			{
 				Name:       "https",
 				Protocol:   corev1.ProtocolTCP,
 				TargetPort: intstr.IntOrString{Type: intstr.String, StrVal: "https"},
-				Port:       8448,
+				Port:       int32(cr.Spec.Ports.HTTPS),
+			},
+			{
+				Name:       "federation",
+				Protocol:   corev1.ProtocolTCP,
+				TargetPort: intstr.IntOrString{Type: intstr.String, StrVal: "federation"},
+				Port:       int32(cr.Spec.Ports.Federation),
 			},
 		},
 	}

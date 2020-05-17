@@ -5,6 +5,10 @@ metadata:
 spec:
   image: docker.io/ananace/matrix-synapse:1.12.4
   serverName: matrix.apps.vrutkovs.devcluster.openshift.com
+  ports:
+    http: 8008
+    https: 8448
+    federation: 9092
   configuration:
     volumes:
     - volume:
@@ -40,7 +44,16 @@ spec:
           bind_addresses: ['0.0.0.0']
 
           resources:
-            - names: [client, federation]
+            - names: [client]
+              compress: false
+        - port: 9092
+          tls: false
+          type: http
+          x_forwarded: true
+          bind_addresses: ['0.0.0.0']
+
+          resources:
+            - names: [federation]
               compress: false
       database:
         name: "sqlite3"

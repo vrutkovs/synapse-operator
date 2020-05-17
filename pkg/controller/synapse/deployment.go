@@ -280,16 +280,21 @@ func getLivenessProbe() corev1.Probe {
 	return probe
 }
 
-func getContainerPorts() []corev1.ContainerPort {
+func getContainerPorts(cr *synapsev1alpha1.Synapse) []corev1.ContainerPort {
 	return []corev1.ContainerPort{
 		{
 			Name:          "http",
-			ContainerPort: 8008,
+			ContainerPort: int32(cr.Spec.Ports.HTTP),
 			Protocol:      corev1.ProtocolTCP,
 		},
 		{
 			Name:          "https",
-			ContainerPort: 8448,
+			ContainerPort: int32(cr.Spec.Ports.HTTPS),
+			Protocol:      corev1.ProtocolTCP,
+		},
+		{
+			Name:          "federation",
+			ContainerPort: int32(cr.Spec.Ports.Federation),
 			Protocol:      corev1.ProtocolTCP,
 		},
 	}
@@ -329,7 +334,7 @@ func getExpectedDeploymentSpec(cr *synapsev1alpha1.Synapse) appsv1.DeploymentSpe
 						Image:          cr.Spec.Image,
 						ReadinessProbe: &readinessProbe,
 						LivenessProbe:  &livenessProbe,
-						Ports:          getContainerPorts(),
+						Ports:          getContainerPorts(cr),
 						VolumeMounts:   getVolumeMounts(cr),
 					},
 				},

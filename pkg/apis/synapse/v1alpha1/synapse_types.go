@@ -25,12 +25,20 @@ type SynapseSecrets struct {
 	SigningKey string `json:"signingKey"`
 }
 
+// SynapsePorts contains configuration for synapse ports
+type SynapsePorts struct {
+	HTTP       int `json:"http"`
+	HTTPS      int `json:"https"`
+	Federation int `json:"federation"`
+}
+
 // SynapseSpec defines the desired state of Synapse
 type SynapseSpec struct {
 	Image      string         `json:"image"`
 	ServerName string         `json:"serverName"`
 	Config     SynapseConfig  `json:"configuration"`
 	Secrets    SynapseSecrets `json:"secrets"`
+	Ports      SynapsePorts   `json:"ports"`
 }
 
 // SynapseStatus defines the observed state of Synapse
