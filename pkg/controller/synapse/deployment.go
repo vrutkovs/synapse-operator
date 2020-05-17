@@ -212,6 +212,10 @@ func getVolumeMounts() []corev1.VolumeMount {
 func getReadinessProbe() corev1.Probe {
 	return corev1.Probe{
 		InitialDelaySeconds: 10,
+		TimeoutSeconds:      1,
+		PeriodSeconds:       10,
+		SuccessThreshold:    1,
+		FailureThreshold:    3,
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/_matrix/client/versions",
@@ -225,6 +229,10 @@ func getReadinessProbe() corev1.Probe {
 func getLivenessProbe() corev1.Probe {
 	return corev1.Probe{
 		InitialDelaySeconds: 120,
+		TimeoutSeconds:      1,
+		PeriodSeconds:       10,
+		SuccessThreshold:    1,
+		FailureThreshold:    3,
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path:   "/_matrix/client/versions",
