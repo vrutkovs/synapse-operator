@@ -6,16 +6,16 @@ spec:
   replicas: 1
   image: "docker.io/vectorim/riot-web:v1.6.0"
   configMountPath: "/"
-  serverName: "matrix.apps.vrutkovs1.origin-gce.dev.openshift.com"
+  serverName: "matrix.apps.vrutkovs.devcluster.openshift.com"
   config: |
     {
       "default_server_config": {
           "m.homeserver": {
-              "base_url": "https://matrix.apps.vrutkovs1.origin-gce.dev.openshift.com",
-              "server_name": "matrix.apps.vrutkovs1.origin-gce.dev.openshift.com"
+              "base_url": "https://matrix.apps.vrutkovs.devcluster.openshift.com",
+              "server_name": "matrix.apps.vrutkovs.devcluster.openshift.com"
           },
           "m.identity_server": {
-              "base_url": "https://matrix.apps.vrutkovs1.origin-gce.dev.openshift.com"
+              "base_url": "https://matrix.apps.vrutkovs.devcluster.openshift.com"
           }
       },
       "disable_identity_server": true,
@@ -45,7 +45,7 @@ spec:
       "default_theme": "light",
       "roomDirectory": {
           "servers": [
-              "matrix.apps.vrutkovs1.origin-gce.dev.openshift.com",
+              "matrix.apps.vrutkovs.devcluster.openshift.com",
               "matrix.org"
           ]
       },

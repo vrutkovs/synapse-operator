@@ -4,7 +4,7 @@ metadata:
   name: example-synapse
 spec:
   image: docker.io/ananace/matrix-synapse:1.12.4
-  serverName: matrix.apps.vrutkovs1.origin-gce.dev.openshift.com
+  serverName: matrix.apps.vrutkovs.devcluster.openshift.com
   configuration:
     volumes:
     - volume:
@@ -20,7 +20,7 @@ spec:
         name: media
         mountPath: "/media_store"
     homeserver: |
-      server_name: "matrix.apps.vrutkovs1.origin-gce.dev.openshift.com"
+      server_name: "matrix.apps.vrutkovs.devcluster.openshift.com"
       pid_file: /tmp/homeserver.pid
       federation_ip_range_blacklist:
         - '127.0.0.0/8'
@@ -46,10 +46,10 @@ spec:
         name: "sqlite3"
         args:
           database: "/db/homeserver.db"
-      log_config: "/synapse/config/matrix.apps.vrutkovs1.origin-gce.dev.openshift.com.log.config"
+      log_config: "/synapse/config/matrix.apps.vrutkovs.devcluster.openshift.com.log.config"
       media_store_path: "/media_store"
       report_stats: true
-      signing_key_path: "/synapse/keys/matrix.apps.vrutkovs1.origin-gce.dev.openshift.com.signing.key"
+      signing_key_path: "/synapse/keys/matrix.apps.vrutkovs.devcluster.openshift.com.signing.key"
       trusted_key_servers:
         - server_name: "matrix.org"
       macaroon_secret_key: "bar"
