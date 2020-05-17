@@ -124,5 +124,10 @@ func (r *ReconcileSynapse) Reconcile(request reconcile.Request) (reconcile.Resul
 		}
 	}
 
+	result, err = r.reconcileService(request, instance, reqLogger)
+	if err != nil {
+		return result, err
+	}
+
 	return reconcile.Result{}, nil
 }

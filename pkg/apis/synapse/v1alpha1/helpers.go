@@ -19,3 +19,8 @@ func (s *Synapse) GetDeploymentName() string {
 func (s *Synapse) GetDeploymentPodName() string {
 	return s.ObjectMeta.Name + "-pod"
 }
+
+// GetServiceName returns generated pod name in the deployment
+func (s *Synapse) GetServiceName() string {
+	return s.ObjectMeta.Name + "-service"
+}
