@@ -17,9 +17,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileSynapse) reconcileDeployment(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger, secretName, configMapName, deploymentName string) (reconcile.Result, error) {
+func (r *ReconcileSynapse) reconcileDeployment(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, error) {
 	// Check if this Deployment already exists
-	deployment := newDeploymentForCR(instance, secretName, configMapName, deploymentName)
+	deployment := newDeploymentForCR(instance)
 
 	// Set Synapse instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, deployment, r.scheme); err != nil {
@@ -42,7 +42,7 @@ func (r *ReconcileSynapse) reconcileDeployment(request reconcile.Request, instan
 		reqLogger.Info("Deployment reconcile error", "DeploymentDeployment.Namespace", found.Namespace, "Deployment.Name", found.Name, "Error", err)
 		return reconcile.Result{Requeue: true}, nil
 	} else if err == nil {
-		expectedSpec := getExpectedDeploymentSpec(instance, secretName, configMapName, deploymentName)
+		expectedSpec := getExpectedDeploymentSpec(instance)
 		// Check if deployment needs to be updated
 		if deploymentNeedsUpdate(&found.Spec, &expectedSpec, reqLogger) {
 			found.ObjectMeta = deployment.ObjectMeta
@@ -136,7 +136,7 @@ func deploymentNeedsUpdate(actual, expected *appsv1.DeploymentSpec, reqLogger lo
 	return false
 }
 
-func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) []corev1.Volume {
+func getVolumes(cr *synapsev1alpha1.Synapse) []corev1.Volume {
 	mode := int32(420)
 	return []corev1.Volume{
 		{
@@ -144,7 +144,7 @@ func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) [
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: configMapName,
+						Name: cr.GetConfigMapName(),
 					},
 					Items: []corev1.KeyToPath{
 						{
@@ -164,7 +164,7 @@ func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) [
 			Name: "keys",
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
-					SecretName: secretName,
+					SecretName: cr.GetSecretName(),
 					Items: []corev1.KeyToPath{
 						{
 							Key:  "signingKey",
@@ -257,7 +257,7 @@ func getDeploymentLabels(cr *synapsev1alpha1.Synapse) map[string]string {
 	}
 }
 
-func getExpectedDeploymentSpec(cr *synapsev1alpha1.Synapse, secretName, configMapName, deploymentName string) appsv1.DeploymentSpec {
+func getExpectedDeploymentSpec(cr *synapsev1alpha1.Synapse) appsv1.DeploymentSpec {
 
 	replicas := int32(1)
 	readinessProbe := getReadinessProbe()
@@ -270,12 +270,12 @@ func getExpectedDeploymentSpec(cr *synapsev1alpha1.Synapse, secretName, configMa
 		},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      deploymentName + "-pod",
+				Name:      cr.GetDeploymentPodName(),
 				Namespace: cr.Namespace,
 				Labels:    getDeploymentLabels(cr),
 			},
 			Spec: corev1.PodSpec{
-				Volumes: getVolumes(cr, configMapName, secretName),
+				Volumes: getVolumes(cr),
 				Containers: []corev1.Container{
 					{
 						Name:           "synapse",
@@ -292,13 +292,13 @@ func getExpectedDeploymentSpec(cr *synapsev1alpha1.Synapse, secretName, configMa
 }
 
 // newDeploymentForCR returns a busybox pod with the same name/namespace as the cr
-func newDeploymentForCR(cr *synapsev1alpha1.Synapse, secretName, configMapName, deploymentName string) *appsv1.Deployment {
+func newDeploymentForCR(cr *synapsev1alpha1.Synapse) *appsv1.Deployment {
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      deploymentName,
+			Name:      cr.GetDeploymentName(),
 			Namespace: cr.Namespace,
 			Labels:    getDeploymentLabels(cr),
 		},
-		Spec: getExpectedDeploymentSpec(cr, secretName, configMapName, deploymentName),
+		Spec: getExpectedDeploymentSpec(cr),
 	}
 }

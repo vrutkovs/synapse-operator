@@ -15,8 +15,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger, configMapName string) (reconcile.Result, error) {
-	configMap := newConfigMapForCR(instance, configMapName)
+func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, error) {
+	configMap := newConfigMapForCR(instance)
 
 	// Set Synapse instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, configMap, r.scheme); err != nil {
@@ -60,6 +60,7 @@ func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instanc
 	return reconcile.Result{}, nil
 }
 
+// getExpectedConfigmapData returns expected data stored in configmap
 func getExpectedConfigmapData(cr *synapsev1alpha1.Synapse) map[string]string {
 	return map[string]string{
 		"homeserver": cr.Spec.Config.Homeserver,
@@ -68,13 +69,13 @@ func getExpectedConfigmapData(cr *synapsev1alpha1.Synapse) map[string]string {
 }
 
 // newConfigMapForCR returns a busybox pod with the same name/namespace as the cr
-func newConfigMapForCR(cr *synapsev1alpha1.Synapse, configMapName string) *corev1.ConfigMap {
+func newConfigMapForCR(cr *synapsev1alpha1.Synapse) *corev1.ConfigMap {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      configMapName,
+			Name:      cr.GetConfigMapName(),
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},

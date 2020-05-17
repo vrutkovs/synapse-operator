@@ -102,21 +102,17 @@ func (r *ReconcileSynapse) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
-	deploymentName := instance.Name + "-deployment"
-	configMapName := instance.Name + "-config"
-	secretName := instance.Name + "-secrets"
-
-	result, err := r.reconcileSecret(request, instance, reqLogger, secretName)
+	result, err := r.reconcileSecret(request, instance, reqLogger)
 	if err != nil {
 		return result, err
 	}
 
-	result, err = r.reconcileConfigMap(request, instance, reqLogger, configMapName)
+	result, err = r.reconcileConfigMap(request, instance, reqLogger)
 	if err != nil {
 		return result, err
 	}
 
-	result, err = r.reconcileDeployment(request, instance, reqLogger, secretName, configMapName, deploymentName)
+	result, err = r.reconcileDeployment(request, instance, reqLogger)
 	if err != nil {
 		return result, err
 	}
