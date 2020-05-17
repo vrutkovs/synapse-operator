@@ -1,0 +1,13 @@
+apiVersion: synapse.vrutkovs.eu/v1alpha1
+kind: SynapseWorker
+metadata:
+  name: example-synapse-federation
+spec:
+  replicas: 1
+  synapse: example-synapse
+  worker: synapse.app.federation_reader
+  protocol: http
+  port: 8083
+  resources:
+    - names:
+      - federation

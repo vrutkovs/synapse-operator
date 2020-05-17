@@ -27,9 +27,9 @@ type SynapseSecrets struct {
 
 // SynapsePorts contains configuration for synapse ports
 type SynapsePorts struct {
-	HTTP       int `json:"http"`
-	HTTPS      int `json:"https"`
-	Federation int `json:"federation"`
+	HTTP        int `json:"http"`
+	HTTPS       int `json:"https"`
+	Replication int `json:"replication"`
 }
 
 // SynapseSpec defines the desired state of Synapse

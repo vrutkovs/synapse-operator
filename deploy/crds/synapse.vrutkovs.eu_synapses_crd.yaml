@@ -1367,16 +1367,16 @@ spec:
             ports:
               description: SynapsePorts contains configuration for synapse ports
               properties:
-                federation:
-                  type: integer
                 http:
                   type: integer
                 https:
                   type: integer
+                replication:
+                  type: integer
               required:
-              - federation
               - http
               - https
+              - replication
               type: object
             secrets:
               description: SynapseSecrets contains all secrets for synapse

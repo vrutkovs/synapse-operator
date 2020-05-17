@@ -70,6 +70,7 @@ rules:
   - synapse.vrutkovs.eu
   resources:
   - '*'
+  - synapseworkers
   verbs:
   - create
   - delete

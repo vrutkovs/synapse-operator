@@ -1,11 +1,11 @@
-package synapse
+package synapseworker
 
 import (
 	"context"
 	"reflect"
 
 	"github.com/go-logr/logr"
-	synapsev1alpha1 "github.com/vrutkovs/synapse-operator/pkg/apis/synapse/v1alpha1"
+	synapsev1alphav1 "github.com/vrutkovs/synapse-operator/pkg/apis/synapse/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -16,10 +16,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileSynapse) reconcileService(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, error) {
-	service := newServiceForCR(instance)
+func (r *ReconcileSynapseWorker) reconcileService(request reconcile.Request, instance *synapsev1alphav1.SynapseWorker, reqLogger logr.Logger, s *synapsev1alphav1.Synapse) (reconcile.Result, error) {
+	service := newServiceForCR(instance, s)
 
-	// Set Synapse instance as the owner and controller
+	// Set SynapseWorker instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, service, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
@@ -43,7 +43,7 @@ func (r *ReconcileSynapse) reconcileService(request reconcile.Request, instance 
 	} else if err == nil {
 		// Check if Service fields haven't change
 
-		expectedSpec := getExpectedServiceSpec(instance)
+		expectedSpec := getExpectedServiceSpec(instance, s)
 		if serviceNeedsUpdate(&found.Spec, &expectedSpec, reqLogger) {
 			found.ObjectMeta = service.ObjectMeta
 			controllerutil.SetControllerReference(instance, found, r.scheme)
@@ -63,7 +63,8 @@ func (r *ReconcileSynapse) reconcileService(request reconcile.Request, instance 
 }
 
 // getExpectedServiceData returns expected data stored in Service
-func getExpectedServiceSpec(cr *synapsev1alpha1.Synapse) corev1.ServiceSpec {
+func getExpectedServiceSpec(cr *synapsev1alphav1.SynapseWorker, s *synapsev1alphav1.Synapse) corev1.ServiceSpec {
+
 	return corev1.ServiceSpec{
 		Selector: getDeploymentLabels(cr),
 		Type:     corev1.ServiceTypeClusterIP,
@@ -71,27 +72,15 @@ func getExpectedServiceSpec(cr *synapsev1alpha1.Synapse) corev1.ServiceSpec {
 			{
 				Name:       "http",
 				Protocol:   corev1.ProtocolTCP,
-				TargetPort: intstr.IntOrString{Type: intstr.String, StrVal: "http"},
-				Port:       int32(cr.Spec.Ports.HTTP),
-			},
-			{
-				Name:       "https",
-				Protocol:   corev1.ProtocolTCP,
-				TargetPort: intstr.IntOrString{Type: intstr.String, StrVal: "https"},
-				Port:       int32(cr.Spec.Ports.HTTPS),
-			},
-			{
-				Name:       "replication",
-				Protocol:   corev1.ProtocolTCP,
-				TargetPort: intstr.IntOrString{Type: intstr.String, StrVal: "replication"},
-				Port:       int32(cr.Spec.Ports.Replication),
+				TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(cr.Spec.Port)},
+				Port:       int32(cr.Spec.Port),
 			},
 		},
 	}
 }
 
 // newServiceForCR returns a busybox pod with the same name/namespace as the cr
-func newServiceForCR(cr *synapsev1alpha1.Synapse) *corev1.Service {
+func newServiceForCR(cr *synapsev1alphav1.SynapseWorker, s *synapsev1alphav1.Synapse) *corev1.Service {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
@@ -101,7 +90,7 @@ func newServiceForCR(cr *synapsev1alpha1.Synapse) *corev1.Service {
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},
-		Spec: getExpectedServiceSpec(cr),
+		Spec: getExpectedServiceSpec(cr, s),
 	}
 }
 

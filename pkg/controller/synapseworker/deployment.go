@@ -1,4 +1,4 @@
-package synapse
+package synapseworker
 
 import (
 	"context"
@@ -7,23 +7,23 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	synapsev1alpha1 "github.com/vrutkovs/synapse-operator/pkg/apis/synapse/v1alpha1"
+	synapsev1alphav1 "github.com/vrutkovs/synapse-operator/pkg/apis/synapse/v1alpha1"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileSynapse) reconcileDeployment(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, bool, error) {
-	// Check if this Deployment already exists
-	deployment := newDeploymentForCR(instance)
+func (r *ReconcileSynapseWorker) reconcileDeployment(request reconcile.Request, instance *synapsev1alphav1.SynapseWorker, reqLogger logr.Logger, s *synapsev1alphav1.Synapse) (reconcile.Result, bool, error) {
 
-	// Set Synapse instance as the owner and controller
+	// Check if this Deployment already exists
+	deployment := newDeploymentForCR(instance, s)
+
+	// Set SynapseWorker instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, deployment, r.scheme); err != nil {
 		return reconcile.Result{}, false, err
 	}
@@ -44,7 +44,7 @@ func (r *ReconcileSynapse) reconcileDeployment(request reconcile.Request, instan
 		reqLogger.Info("Deployment reconcile error", "DeploymentDeployment.Namespace", found.Namespace, "Deployment.Name", found.Name, "Error", err)
 		return reconcile.Result{Requeue: true}, false, nil
 	} else if err == nil {
-		expectedSpec := getExpectedDeploymentSpec(instance)
+		expectedSpec := getExpectedDeploymentSpec(instance, s)
 		// Check if deployment needs to be updated
 		if deploymentNeedsUpdate(&found.Spec, &expectedSpec, reqLogger) {
 			found.ObjectMeta = deployment.ObjectMeta
@@ -68,12 +68,6 @@ func deploymentNeedsUpdate(actual, expected *appsv1.DeploymentSpec, reqLogger lo
 	// Replicas
 	if actual.Replicas != nil && expected.Replicas != nil && *actual.Replicas != *expected.Replicas {
 		reqLogger.Info("Deployment replicas mismatch found", "actual", actual.Replicas, "expected", expected.Replicas)
-		return true
-	}
-
-	// Strategy
-	if !reflect.DeepEqual(actual.Strategy, expected.Strategy) {
-		reqLogger.Info("Deployment strategy mismatch found", "actual", actual.Strategy, "expected", expected.Strategy)
 		return true
 	}
 
@@ -144,8 +138,8 @@ func deploymentNeedsUpdate(actual, expected *appsv1.DeploymentSpec, reqLogger lo
 	return false
 }
 
-func (r *ReconcileSynapse) forceDeploymentRollout(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, error) {
-	deployment := newDeploymentForCR(instance)
+func (r *ReconcileSynapseWorker) forceDeploymentRollout(request reconcile.Request, instance *synapsev1alphav1.SynapseWorker, reqLogger logr.Logger, s *synapsev1alphav1.Synapse) (reconcile.Result, error) {
+	deployment := newDeploymentForCR(instance, s)
 	found := &appsv1.Deployment{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, found)
 	if err != nil {
@@ -166,70 +160,64 @@ func (r *ReconcileSynapse) forceDeploymentRollout(request reconcile.Request, ins
 
 }
 
-func getDefaultProbe() *corev1.Probe {
-	return &corev1.Probe{
-		InitialDelaySeconds: 10,
-		TimeoutSeconds:      1,
-		PeriodSeconds:       10,
-		SuccessThreshold:    1,
-		FailureThreshold:    3,
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   "/_matrix/client/versions",
-				Port:   intstr.FromString("http"),
-				Scheme: "HTTP",
+func getWorkerVolume(cr *synapsev1alphav1.SynapseWorker) corev1.Volume {
+	mode := int32(420)
+	return corev1.Volume{
+		Name: "worker-config",
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: cr.GetConfigMapName(),
+				},
+				Items: []corev1.KeyToPath{
+					{
+						Key:  "worker.yaml",
+						Path: "worker.yaml",
+					},
+				},
+				DefaultMode: &mode,
 			},
 		},
 	}
 }
 
-func getReadinessProbe() corev1.Probe {
-	return *getDefaultProbe()
+func getVolumes(cr *synapsev1alphav1.SynapseWorker, s *synapsev1alphav1.Synapse) []corev1.Volume {
+	return append(s.GetVolumes(), getWorkerVolume(cr))
 }
 
-func getLivenessProbe() corev1.Probe {
-	probe := *getDefaultProbe()
-	probe.InitialDelaySeconds = 120
-	return probe
+func getWorkerVolumeMounts(cr *synapsev1alphav1.SynapseWorker) corev1.VolumeMount {
+	return corev1.VolumeMount{
+		Name:      "worker-config",
+		MountPath: "/synapse/config/worker.yaml",
+	}
 }
 
-func getContainerPorts(cr *synapsev1alpha1.Synapse) []corev1.ContainerPort {
+func getVolumeMounts(cr *synapsev1alphav1.SynapseWorker, s *synapsev1alphav1.Synapse) []corev1.VolumeMount {
+	return append(s.GetVolumeMounts(), getWorkerVolumeMounts(cr))
+}
+
+func getContainerPorts(cr *synapsev1alphav1.SynapseWorker) []corev1.ContainerPort {
 	return []corev1.ContainerPort{
 		{
 			Name:          "http",
-			ContainerPort: int32(cr.Spec.Ports.HTTP),
-			Protocol:      corev1.ProtocolTCP,
-		},
-		{
-			Name:          "https",
-			ContainerPort: int32(cr.Spec.Ports.HTTPS),
-			Protocol:      corev1.ProtocolTCP,
-		},
-		{
-			Name:          "replication",
-			ContainerPort: int32(cr.Spec.Ports.Replication),
+			ContainerPort: int32(cr.Spec.Port),
 			Protocol:      corev1.ProtocolTCP,
 		},
 	}
 }
 
-func getDeploymentLabels(cr *synapsev1alpha1.Synapse) map[string]string {
+func getDeploymentLabels(cr *synapsev1alphav1.SynapseWorker) map[string]string {
 	return map[string]string{
 		"app": cr.Name,
 	}
 }
 
-func getExpectedDeploymentSpec(cr *synapsev1alpha1.Synapse) appsv1.DeploymentSpec {
+func getExpectedDeploymentSpec(cr *synapsev1alphav1.SynapseWorker, s *synapsev1alphav1.Synapse) appsv1.DeploymentSpec {
 
-	replicas := int32(1)
-	readinessProbe := getReadinessProbe()
-	livenessProbe := getLivenessProbe()
+	replicas := int32(cr.Spec.Replicas)
 
 	return appsv1.DeploymentSpec{
 		Replicas: &replicas,
-		Strategy: appsv1.DeploymentStrategy{
-			Type: appsv1.RecreateDeploymentStrategyType,
-		},
 		Selector: &metav1.LabelSelector{
 			MatchLabels: getDeploymentLabels(cr),
 		},
@@ -240,15 +228,16 @@ func getExpectedDeploymentSpec(cr *synapsev1alpha1.Synapse) appsv1.DeploymentSpe
 				Labels:    getDeploymentLabels(cr),
 			},
 			Spec: corev1.PodSpec{
-				Volumes: cr.GetVolumes(),
+				Volumes: getVolumes(cr, s),
 				Containers: []corev1.Container{
 					{
-						Name:           "synapse",
-						Image:          cr.Spec.Image,
-						ReadinessProbe: &readinessProbe,
-						LivenessProbe:  &livenessProbe,
-						Ports:          getContainerPorts(cr),
-						VolumeMounts:   cr.GetVolumeMounts(),
+						Name:         "worker",
+						Image:        s.Spec.Image,
+						Ports:        getContainerPorts(cr),
+						VolumeMounts: getVolumeMounts(cr, s),
+						Args: []string{
+							cr.Spec.Worker, "-c", "/synapse/config/worker.yaml",
+						},
 					},
 				},
 			},
@@ -257,13 +246,13 @@ func getExpectedDeploymentSpec(cr *synapsev1alpha1.Synapse) appsv1.DeploymentSpe
 }
 
 // newDeploymentForCR returns a busybox pod with the same name/namespace as the cr
-func newDeploymentForCR(cr *synapsev1alpha1.Synapse) *appsv1.Deployment {
+func newDeploymentForCR(cr *synapsev1alphav1.SynapseWorker, s *synapsev1alphav1.Synapse) *appsv1.Deployment {
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cr.GetDeploymentName(),
 			Namespace: cr.Namespace,
 			Labels:    getDeploymentLabels(cr),
 		},
-		Spec: getExpectedDeploymentSpec(cr),
+		Spec: getExpectedDeploymentSpec(cr, s),
 	}
 }

@@ -8,7 +8,7 @@ spec:
   ports:
     http: 8008
     https: 8448
-    federation: 9092
+    replication: 9092
   configuration:
     volumes:
     - volume:
@@ -48,12 +48,11 @@ spec:
               compress: false
         - port: 9092
           tls: false
-          type: http
           x_forwarded: true
           bind_addresses: ['0.0.0.0']
 
           resources:
-            - names: [federation]
+            - names: [replication]
               compress: false
       database:
         name: "sqlite3"
