@@ -78,3 +78,15 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - riot.vrutkovs.eu
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

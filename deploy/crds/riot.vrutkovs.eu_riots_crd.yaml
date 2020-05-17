@@ -1,0 +1,56 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: riots.riot.vrutkovs.eu
+spec:
+  group: riot.vrutkovs.eu
+  names:
+    kind: Riot
+    listKind: RiotList
+    plural: riots
+    singular: riot
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Riot is the Schema for the riots API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: RiotSpec defines the desired state of Riot
+          properties:
+            config:
+              type: string
+            image:
+              type: string
+            replicas:
+              type: integer
+            serverName:
+              type: string
+          required:
+          - config
+          - image
+          - replicas
+          - serverName
+          type: object
+        status:
+          description: RiotStatus defines the observed state of Riot
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
