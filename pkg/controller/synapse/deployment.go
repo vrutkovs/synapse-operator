@@ -148,6 +148,7 @@ func (r *ReconcileSynapse) forceDeploymentRollout(request reconcile.Request, ins
 	}
 
 	// Update annotation in the pod template to force deployment rollout
+	reqLogger.Info("Config/Secret changed: rolling out new pods", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
 	found.Spec.Template.Annotations = map[string]string{
 		"synapse-operator/force-rollout": fmt.Sprintf("config changed at %q", time.Now().String()),
 	}
