@@ -74,19 +74,70 @@ func deploymentNeedsUpdate(actual, expected *appsv1.DeploymentSpec, reqLogger lo
 		reqLogger.Info("Deployment label mismatch found", "actual", actual.Template.ObjectMeta.Labels, "expected", expected.Template.ObjectMeta.Labels)
 		return true
 	}
+
 	// Template Spec Volumes
+	if !reflect.DeepEqual(actual.Template.Spec.Volumes, expected.Template.Spec.Volumes) {
+		reqLogger.Info("Deployment volume mismatch found", "actual", actual.Template.Spec.Volumes, "expected", expected.Template.Spec.Volumes)
+		return true
+	}
+
 	// Template Spec Containers length
+	if len(actual.Template.Spec.Containers) != len(expected.Template.Spec.Containers) {
+		reqLogger.Info("Deployment container number mismatch found", "actual", len(actual.Template.Spec.Containers), "expected", expected.Template.Spec.Containers)
+		return true
+	}
+
 	// Template Spec Containers [0] Name
+	if actual.Template.Spec.Containers[0].Name != expected.Template.Spec.Containers[0].Name {
+		reqLogger.Info("Deployment name mismatch found", "actual", actual.Template.Spec.Containers[0].Name, "expected", expected.Template.Spec.Containers[0].Name)
+	}
+
 	// Template Spec Containers [0] ReadinessProbe
+	if !reflect.DeepEqual(actual.Template.Spec.Containers[0].ReadinessProbe, expected.Template.Spec.Containers[0].ReadinessProbe) {
+		reqLogger.Info("Deployment readiness probe mismatch found", "actual", actual.Template.Spec.Containers[0].ReadinessProbe, "expected", expected.Template.Spec.Containers[0].ReadinessProbe)
+		return true
+	}
+
 	// Template Spec Containers [0] LivenessProbe
+	if !reflect.DeepEqual(actual.Template.Spec.Containers[0].LivenessProbe, expected.Template.Spec.Containers[0].LivenessProbe) {
+		reqLogger.Info("Deployment liveness probe mismatch found", "actual", actual.Template.Spec.Containers[0].LivenessProbe, "expected", expected.Template.Spec.Containers[0].LivenessProbe)
+		return true
+	}
+
 	// Template Spec Containers [0] Image
+	if actual.Template.Spec.Containers[0].Image != expected.Template.Spec.Containers[0].Image {
+		reqLogger.Info("Deployment image mismatch found", "actual", actual.Template.Spec.Containers[0].Image, "expected", expected.Template.Spec.Containers[0].Image)
+	}
+
 	// Template Spec Containers [0] Ports
+	if !reflect.DeepEqual(actual.Template.Spec.Containers[0].Ports, expected.Template.Spec.Containers[0].Ports) {
+		reqLogger.Info("Deployment ports mismatch found", "actual", actual.Template.Spec.Containers[0].Ports, "expected", expected.Template.Spec.Containers[0].Ports)
+		return true
+	}
+
 	// Template Spec Containers [0] VolumeMounts
+	if !reflect.DeepEqual(actual.Template.Spec.Containers[0].VolumeMounts, expected.Template.Spec.Containers[0].VolumeMounts) {
+		reqLogger.Info("Deployment volume mount mismatch found", "actual", actual.Template.Spec.Containers[0].VolumeMounts, "expected", expected.Template.Spec.Containers[0].VolumeMounts)
+		return true
+	}
+
+	// Template Spec Containers [0] Args
+	if !reflect.DeepEqual(actual.Template.Spec.Containers[0].Args, expected.Template.Spec.Containers[0].Args) {
+		reqLogger.Info("Deployment args mismatch found", "actual", actual.Template.Spec.Containers[0].Args, "expected", expected.Template.Spec.Containers[0].Args)
+		return true
+	}
+
+	// Template Spec Containers [0] Command
+	if !reflect.DeepEqual(actual.Template.Spec.Containers[0].Command, expected.Template.Spec.Containers[0].Command) {
+		reqLogger.Info("Deployment command mismatch found", "actual", actual.Template.Spec.Containers[0].Command, "expected", expected.Template.Spec.Containers[0].Command)
+		return true
+	}
 
 	return false
 }
 
 func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) []corev1.Volume {
+	mode := int32(420)
 	return []corev1.Volume{
 		{
 			Name: "config",
@@ -105,6 +156,7 @@ func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) [
 							Path: cr.Spec.ServerName + ".log.config",
 						},
 					},
+					DefaultMode: &mode,
 				},
 			},
 		},
@@ -127,6 +179,7 @@ func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) [
 							Path: "tls.key",
 						},
 					},
+					DefaultMode: &mode,
 				},
 			},
 		},
