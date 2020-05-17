@@ -102,19 +102,27 @@ func (r *ReconcileSynapse) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
-	result, err := r.reconcileSecret(request, instance, reqLogger)
+	result, secretUpdated, err := r.reconcileSecret(request, instance, reqLogger)
 	if err != nil {
 		return result, err
 	}
 
-	result, err = r.reconcileConfigMap(request, instance, reqLogger)
+	result, cmUpdated, err := r.reconcileConfigMap(request, instance, reqLogger)
 	if err != nil {
 		return result, err
 	}
 
-	result, err = r.reconcileDeployment(request, instance, reqLogger)
+	result, created, err := r.reconcileDeployment(request, instance, reqLogger)
 	if err != nil {
 		return result, err
 	}
+
+	// If either of configMap or secret has been updated force rollout
+	if (cmUpdated || secretUpdated) && !created {
+		if result, err := r.forceDeploymentRollout(request, instance, reqLogger); err != nil {
+			return result, err
+		}
+	}
+
 	return reconcile.Result{}, nil
 }

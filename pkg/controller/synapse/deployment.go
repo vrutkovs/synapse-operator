@@ -2,7 +2,9 @@ package synapse
 
 import (
 	"context"
+	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/go-logr/logr"
 	synapsev1alpha1 "github.com/vrutkovs/synapse-operator/pkg/apis/synapse/v1alpha1"
@@ -17,13 +19,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileSynapse) reconcileDeployment(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, error) {
+func (r *ReconcileSynapse) reconcileDeployment(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, bool, error) {
 	// Check if this Deployment already exists
 	deployment := newDeploymentForCR(instance)
 
 	// Set Synapse instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, deployment, r.scheme); err != nil {
-		return reconcile.Result{}, err
+		return reconcile.Result{}, false, err
 	}
 
 	found := &appsv1.Deployment{}
@@ -32,15 +34,15 @@ func (r *ReconcileSynapse) reconcileDeployment(request reconcile.Request, instan
 		reqLogger.Info("Creating a new Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
 		err = r.client.Create(context.TODO(), deployment)
 		if err != nil {
-			return reconcile.Result{}, err
+			return reconcile.Result{}, false, err
 		}
 
 		// Deployment created successfully - don't requeue
-		return reconcile.Result{}, nil
+		return reconcile.Result{}, true, nil
 	} else if err != nil {
 		// Unknown error - requeue
 		reqLogger.Info("Deployment reconcile error", "DeploymentDeployment.Namespace", found.Namespace, "Deployment.Name", found.Name, "Error", err)
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{Requeue: true}, false, nil
 	} else if err == nil {
 		expectedSpec := getExpectedDeploymentSpec(instance)
 		// Check if deployment needs to be updated
@@ -50,16 +52,16 @@ func (r *ReconcileSynapse) reconcileDeployment(request reconcile.Request, instan
 			found.Spec = expectedSpec
 			err = r.client.Update(context.TODO(), found)
 			if err != nil {
-				return reconcile.Result{Requeue: true}, err
+				return reconcile.Result{Requeue: true}, false, err
 			}
 			reqLogger.Info("Deployment spec updated", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
-			return reconcile.Result{}, nil
+			return reconcile.Result{}, false, nil
 		}
 	}
 
 	// Deployment already exists - don't requeue
 	reqLogger.Info("Skip reconcile: Deployment already exists", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
-	return reconcile.Result{}, nil
+	return reconcile.Result{}, false, nil
 }
 
 func deploymentNeedsUpdate(actual, expected *appsv1.DeploymentSpec, reqLogger logr.Logger) bool {
@@ -134,6 +136,27 @@ func deploymentNeedsUpdate(actual, expected *appsv1.DeploymentSpec, reqLogger lo
 	}
 
 	return false
+}
+
+func (r *ReconcileSynapse) forceDeploymentRollout(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, error) {
+	deployment := newDeploymentForCR(instance)
+	found := &appsv1.Deployment{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, found)
+	if err != nil {
+		// No deployment exists, odd
+		return reconcile.Result{Requeue: true}, err
+	}
+
+	// Update annotation in the pod template to force deployment rollout
+	found.Spec.Template.Annotations = map[string]string{
+		"synapse-operator/force-rollout": fmt.Sprintf("config changed at %q", time.Now().String()),
+	}
+	err = r.client.Update(context.TODO(), found)
+	if err != nil {
+		return reconcile.Result{Requeue: true}, err
+	}
+	return reconcile.Result{}, nil
+
 }
 
 func getVolumes(cr *synapsev1alpha1.Synapse) []corev1.Volume {

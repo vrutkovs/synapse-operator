@@ -15,13 +15,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileSynapse) reconcileSecret(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, error) {
+func (r *ReconcileSynapse) reconcileSecret(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, bool, error) {
 	// Check if this Secret already exists
 	secret := newSecretForCR(instance)
 
 	// Set Synapse instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, secret, r.scheme); err != nil {
-		return reconcile.Result{}, err
+		return reconcile.Result{}, false, err
 	}
 
 	found := &corev1.Secret{}
@@ -30,14 +30,14 @@ func (r *ReconcileSynapse) reconcileSecret(request reconcile.Request, instance *
 		reqLogger.Info("Creating a new Secret", "Secret.Namespace", secret.Namespace, "Secret.Name", secret.Name)
 		err = r.client.Create(context.TODO(), secret)
 		if err != nil {
-			return reconcile.Result{}, err
+			return reconcile.Result{}, false, err
 		}
 
 		// Secret created successfully - don't requeue
-		return reconcile.Result{}, nil
+		return reconcile.Result{}, true, nil
 	} else if err != nil {
 		reqLogger.Info("Secret reconcile error", "Secret.Namespace", found.Namespace, "Secret.Name", found.Name, "Error", err)
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{Requeue: true}, false, nil
 	} else if err == nil {
 		// Check if secret fields haven't change
 		expectedData := getExpectedSecretData(instance)
@@ -47,16 +47,16 @@ func (r *ReconcileSynapse) reconcileSecret(request reconcile.Request, instance *
 			found.Data = expectedData
 			err = r.client.Update(context.TODO(), found)
 			if err != nil {
-				return reconcile.Result{Requeue: true}, err
+				return reconcile.Result{Requeue: true}, false, err
 			}
 			reqLogger.Info("Secret contents updated", "Secret.Namespace", found.Namespace, "Secret.Name", found.Name)
-			return reconcile.Result{}, nil
+			return reconcile.Result{}, true, nil
 		}
 	}
 
 	// Secret already exists - don't requeue
 	reqLogger.Info("Skip reconcile: Secret already exists", "Secret.Namespace", found.Namespace, "Secret.Name", found.Name)
-	return reconcile.Result{}, nil
+	return reconcile.Result{}, false, nil
 }
 
 func getExpectedSecretData(cr *synapsev1alpha1.Synapse) map[string][]byte {

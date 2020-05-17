@@ -15,12 +15,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, error) {
+func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger) (reconcile.Result, bool, error) {
 	configMap := newConfigMapForCR(instance)
 
 	// Set Synapse instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, configMap, r.scheme); err != nil {
-		return reconcile.Result{}, err
+		return reconcile.Result{}, false, err
 	}
 
 	// Check if this ConfigMap already exists
@@ -30,15 +30,15 @@ func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instanc
 		reqLogger.Info("Creating a new ConfigMap", "ConfigMap.Namespace", configMap.Namespace, "ConfigMap.Name", configMap.Name)
 		err = r.client.Create(context.TODO(), configMap)
 		if err != nil {
-			return reconcile.Result{}, err
+			return reconcile.Result{}, false, err
 		}
 
 		// ConfigMap created successfully - don't requeue
-		return reconcile.Result{}, nil
+		return reconcile.Result{}, true, nil
 	} else if err != nil {
 		// Unknown error - requeue
 		reqLogger.Info("ConfigMap reconcile error", "ConfigMap.Namespace", found.Namespace, "ConfigMap.Name", found.Name, "Error", err)
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{Requeue: true}, false, nil
 	} else if err == nil {
 		// Check if configmap fields haven't change
 		expectedData := getExpectedConfigmapData(instance)
@@ -48,16 +48,16 @@ func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instanc
 			found.Data = expectedData
 			err = r.client.Update(context.TODO(), found)
 			if err != nil {
-				return reconcile.Result{Requeue: true}, err
+				return reconcile.Result{Requeue: true}, false, err
 			}
 			reqLogger.Info("ConfigMap contents updated", "ConfigMap.Namespace", found.Namespace, "ConfigMap.Name", found.Name)
-			return reconcile.Result{}, nil
+			return reconcile.Result{}, true, nil
 		}
 	}
 
 	// ConfigMap already exists - don't requeue
 	reqLogger.Info("Skip reconcile: ConfigMap already exists", "ConfigMap.Namespace", found.Namespace, "ConfigMap.Name", found.Name)
-	return reconcile.Result{}, nil
+	return reconcile.Result{}, false, nil
 }
 
 // getExpectedConfigmapData returns expected data stored in configmap
