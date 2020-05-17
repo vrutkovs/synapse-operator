@@ -47,13 +47,9 @@ spec:
             - names: [client]
               compress: false
         - port: 9092
-          tls: false
-          x_forwarded: true
           bind_addresses: ['0.0.0.0']
+          type: replication
 
-          resources:
-            - names: [replication]
-              compress: false
       database:
         name: "sqlite3"
         args:
