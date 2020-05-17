@@ -1,0 +1,36 @@
+name: Operator SDK build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Fetching operator-sdk
+      run: |
+        curl -L -o /tmp/operator-sdk "https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu"
+        chmod +x /tmp/operator-sdk
+      env:
+        RELEASE_VERSION: v0.17.0
+
+    - name: Build
+      run: |
+        /tmp/operator-sdk build quay.io/vrutkovs/synapse-operator:latest
+
+    - name: login to quay
+      run: docker login -u vrutkovs -p $QUAY_PASSWORD quay.io
+      env:
+        QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
+      if: github.event_name == 'push'
+    - name: push the image
+      run: docker push quay.io/vrutkovs/synapse-operator:latest
+      if: github.event_name == 'push'
