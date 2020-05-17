@@ -209,8 +209,8 @@ func getVolumeMounts() []corev1.VolumeMount {
 	}
 }
 
-func getReadinessProbe() corev1.Probe {
-	return corev1.Probe{
+func getDefaultProbe() *corev1.Probe {
+	return &corev1.Probe{
 		InitialDelaySeconds: 10,
 		TimeoutSeconds:      1,
 		PeriodSeconds:       10,
@@ -226,21 +226,14 @@ func getReadinessProbe() corev1.Probe {
 	}
 }
 
+func getReadinessProbe() corev1.Probe {
+	return *getDefaultProbe()
+}
+
 func getLivenessProbe() corev1.Probe {
-	return corev1.Probe{
-		InitialDelaySeconds: 120,
-		TimeoutSeconds:      1,
-		PeriodSeconds:       10,
-		SuccessThreshold:    1,
-		FailureThreshold:    3,
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path:   "/_matrix/client/versions",
-				Port:   intstr.FromString("http"),
-				Scheme: "HTTP",
-			},
-		},
-	}
+	probe := *getDefaultProbe()
+	probe.InitialDelaySeconds = 120
+	return probe
 }
 
 func getContainerPorts() []corev1.ContainerPort {
