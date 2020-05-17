@@ -224,7 +224,7 @@ func getContainerPorts() []corev1.ContainerPort {
 	return []corev1.ContainerPort{
 		{
 			Name:          "http",
-			ContainerPort: 8080,
+			ContainerPort: 80,
 			Protocol:      corev1.ProtocolTCP,
 		},
 	}
