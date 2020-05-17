@@ -68,6 +68,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &synapsev1alpha1.Synapse{},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
