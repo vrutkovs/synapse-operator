@@ -172,7 +172,7 @@ func getVolumes(cr *riotv1alphav1.Riot) []corev1.Volume {
 					},
 					Items: []corev1.KeyToPath{
 						{
-							Key:  "config",
+							Key:  "config.json",
 							Path: "config.json",
 						},
 					},
@@ -186,8 +186,9 @@ func getVolumes(cr *riotv1alphav1.Riot) []corev1.Volume {
 func getVolumeMounts(cr *riotv1alphav1.Riot) []corev1.VolumeMount {
 	return []corev1.VolumeMount{
 		{
-			Name:      "config.json",
+			Name:      "config",
 			MountPath: "/etc/riot-web/",
+			SubPath:   "config.json",
 		},
 	}
 }
