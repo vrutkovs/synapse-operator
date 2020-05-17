@@ -72,13 +72,7 @@ func getExpectedServiceSpec(cr *riotv1alphav1.Riot) corev1.ServiceSpec {
 				Name:       "http",
 				Protocol:   corev1.ProtocolTCP,
 				TargetPort: intstr.IntOrString{Type: intstr.String, StrVal: "http"},
-				Port:       8008,
-			},
-			{
-				Name:       "https",
-				Protocol:   corev1.ProtocolTCP,
-				TargetPort: intstr.IntOrString{Type: intstr.String, StrVal: "https"},
-				Port:       8448,
+				Port:       8080,
 			},
 		},
 	}
