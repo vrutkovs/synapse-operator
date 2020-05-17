@@ -8,7 +8,7 @@ spec:
   configuration:
     homeserver: |
       server_name: "matrix.vrutkovs.eu"
-      pid_file: /homeserver.pid
+      pid_file: /tmp/homeserver.pid
       federation_ip_range_blacklist:
         - '127.0.0.0/8'
         - '10.0.0.0/8'
@@ -32,8 +32,8 @@ spec:
       database:
         name: "sqlite3"
         args:
-          database: "/homeserver.db"
-      log_config: "/synapse/keys/matrix.vrutkovs.eu.log.config"
+          database: "/tmp/homeserver.db"
+      log_config: "/synapse/config/matrix.vrutkovs.eu.log.config"
       media_store_path: "/media_store"
       registration_shared_secret: "JJ_F7HVf=ZcLuvrr~DX9kmU2p-EKzW5SY0_o4&m*xAmp,.K4wh"
       report_stats: true
@@ -42,61 +42,11 @@ spec:
       signing_key_path: "/synapse/keys/matrix.vrutkovs.eu.signing.key"
       trusted_key_servers:
         - server_name: "matrix.org"
-  secrets:
-    tls:
-      cert: |
-        -----BEGIN CERTIFICATE-----
-        MIICnzCCAYcCAgPoMA0GCSqGSIb3DQEBCwUAMBUxEzARBgNVBAMMCmhzLmV4YW1w
-        bGUwHhcNMjAwNTE2MTcxMzAwWhcNMzAwNTE0MTcxMzAwWjAVMRMwEQYDVQQDDApo
-        cy5leGFtcGxlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApaFoK+zZ
-        Tr0cjv9bPRIPSlZnsNaLY7e7Fvho220UJtFIBxEB2ncdZVvf1fRw58v2Gm8B2cLE
-        a8Ft/4pS10inhRp7zSNEs8Gg5GHNJ8n2U17LG9JX8TxC1GJRV38WdAF03qZdqAZN
-        fMPwMgC/aDUtzCIA5ZzepzHZ0ycgt/3nSpzo3bvTopDepFdrI6a3qffCFRzxNeYZ
-        yIZqCPICiKl5YJqVmXUqCiweSL4o0zJGUNzZ7+jHgfpipaVjpqEu1yDEyBvM/JVA
-        XhZfjBFaSQNUk4qeV1W0ta6umMSgDhlP47cLgEGG225DEQP/JFWwTLdoS2sVeFPN
-        1j8+GV/2yYFV3QIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQCk+9NNXQT9iG528oUP
-        XwZlSg6CobVTL/gGrEQitoAISjpUwKoBwETqL0PvggIUib+4GeBdQzY5+PJPQskd
-        SIuT/WtFQkHhRX2N8jeq4knDFzrDExXQV0wTltq8Xb2V1fPxkLkst2rku78760ul
-        qgtRHC8Irs8kBnU9XHJKpqwH3bwhPT3kuN4FPXmni9fU0L0J6fqBhaiRoUNWhLF4
-        plKd5K/CXUyOKe3AeP/0mfSQoo8M47z/ALNQd8qAdtaX0h58ljzgCkEGcpfNDdn/
-        FLCQ6bfpvcXDINgk1+uGBgraIyFm87fc54Crh1CDLTOdg/OLNVnefrnceisY12uP
-        FvdF
-        -----END CERTIFICATE-----
-      key: |
-        -----BEGIN PRIVATE KEY-----
-        MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCloWgr7NlOvRyO
-        /1s9Eg9KVmew1otjt7sW+GjbbRQm0UgHEQHadx1lW9/V9HDny/YabwHZwsRrwW3/
-        ilLXSKeFGnvNI0SzwaDkYc0nyfZTXssb0lfxPELUYlFXfxZ0AXTepl2oBk18w/Ay
-        AL9oNS3MIgDlnN6nMdnTJyC3/edKnOjdu9OikN6kV2sjprep98IVHPE15hnIhmoI
-        8gKIqXlgmpWZdSoKLB5IvijTMkZQ3Nnv6MeB+mKlpWOmoS7XIMTIG8z8lUBeFl+M
-        EVpJA1STip5XVbS1rq6YxKAOGU/jtwuAQYbbbkMRA/8kVbBMt2hLaxV4U83WPz4Z
-        X/bJgVXdAgMBAAECggEAcO8jZn/ylBuiM2auQW/k+Rz9SrifBnkqmjj61lMD4Ivm
-        ftr71ohNhOUmNG6d5Y9O2StDqcWBxK95XzpjzeL+RmWOcItRtveZyt9c0XqF+Maz
-        2t6LlDMwpjv7lptTJfowQ/hP99eEUkQPrSiRWm6YMY4l6moR7xKwoacWSh5X7KkD
-        MCzJZi6vGZ6tSD5nGOPHr9tMrVdymQzFrri+REmUGWjE+T1h7iNdt+RabRm7slLj
-        K5kQSn4Py0QMG34AKC/rYuT8Q+MHXdUxTVGJ3CcBgzspQOj9rE7Y8te4BhVVcpep
-        I1EnpkcF16rEH3nvTfW2HphbBo9w8G+0N/fMfvSaCQKBgQDcdbTu1mPIkIzZq/f8
-        SfJRXy3f8ru/SDLUZ8iolbaFJt01VjsBPPwhJhVmPhbJ4lMU6XiO8eeTOnOKKfOs
-        LkZEQvGXAJsV8JqNud37qXt9jyciyYvnzXedIbN2M0ZTzBsiar9xs5XAgCOklm49
-        q4pfwMUDa/CwbQjMiVpR09jOOwKBgQDAVOpjrMUfeI1DpC+odmG3rpKFMw4fPTME
-        dolN3d4iEt7C+3oTSWG9NJzyAlU9afmCHuY2mDfIXVfesQQcIn/xTi1X+XAJIGeC
-        kKhbk8IyL1b6vuULJkRl13IUVpsNARaXBKbytJyNEZbI7NqcUyp3ZLKwCKNH8VmF
-        /lwf6HyyxwKBgGbKZxNZWOsiIto3KYgzfk1cgIpDpjB43GJXBaM9Mv4AcfG1hAt+
-        wNw/4ohqeLum0DAW78ROnDf0b/zCtL/aT57yS6ypdqYTKizctdjqXA7eGVRJ/vaU
-        wam9Fe0N2UOnDhvNA/hi0HcSCAxsq3gLrJgazIFc6buJCyo6/KbcjOETAoGBAK9N
-        No4/LTSwFmHuxpmPvSVEcrwBev+yMkwBFsjoTs1T0cJ6oBvwKKvhxqM2ySa+7vJQ
-        45gjScTQf4S0Z4CVWXRBw0aKTjmjVXVGEI3XsYs4ZtkJIY72BCWnJ42uGojR0xs2
-        3EwfnwldXMgqSl9t1ikYmV2lod2y99wPqTxUFUSFAoGACUBkP7fGqqK3YLiNIxJ/
-        TxBtGXXO+1hFy5DZeJa+4iK3oqnYgJr5rtPR8LIfNANILsPvknXoO/7zUR/d6ZnG
-        tcrO9LSlzOZolYK81V29cozf715QRtJFylUNuzZzy6b9bbPBr1yYQzDn01tGa1wk
-        neVXXMiEBz3yL2xRpWlxcS4=
-        -----END PRIVATE KEY-----
-    keys:
     logging: |
       version: 1
       formatters:
         precise:
-        format: '%(asctime)s - %(name)s - %(lineno)d - %(levelname)s - %(request)s- %(message)s'
+          format: '%(asctime)s - %(name)s - %(lineno)d - %(levelname)s - %(request)s- %(message)s'
       filters:
         context:
           (): synapse.util.logcontext.LoggingContextFilter
@@ -113,4 +63,52 @@ spec:
       root:
           level: INFO
           handlers: [console]
+  secrets:
+    cert: |
+      -----BEGIN CERTIFICATE-----
+      MIICnzCCAYcCAgPoMA0GCSqGSIb3DQEBCwUAMBUxEzARBgNVBAMMCmhzLmV4YW1w
+      bGUwHhcNMjAwNTE2MTcxMzAwWhcNMzAwNTE0MTcxMzAwWjAVMRMwEQYDVQQDDApo
+      cy5leGFtcGxlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApaFoK+zZ
+      Tr0cjv9bPRIPSlZnsNaLY7e7Fvho220UJtFIBxEB2ncdZVvf1fRw58v2Gm8B2cLE
+      a8Ft/4pS10inhRp7zSNEs8Gg5GHNJ8n2U17LG9JX8TxC1GJRV38WdAF03qZdqAZN
+      fMPwMgC/aDUtzCIA5ZzepzHZ0ycgt/3nSpzo3bvTopDepFdrI6a3qffCFRzxNeYZ
+      yIZqCPICiKl5YJqVmXUqCiweSL4o0zJGUNzZ7+jHgfpipaVjpqEu1yDEyBvM/JVA
+      XhZfjBFaSQNUk4qeV1W0ta6umMSgDhlP47cLgEGG225DEQP/JFWwTLdoS2sVeFPN
+      1j8+GV/2yYFV3QIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQCk+9NNXQT9iG528oUP
+      XwZlSg6CobVTL/gGrEQitoAISjpUwKoBwETqL0PvggIUib+4GeBdQzY5+PJPQskd
+      SIuT/WtFQkHhRX2N8jeq4knDFzrDExXQV0wTltq8Xb2V1fPxkLkst2rku78760ul
+      qgtRHC8Irs8kBnU9XHJKpqwH3bwhPT3kuN4FPXmni9fU0L0J6fqBhaiRoUNWhLF4
+      plKd5K/CXUyOKe3AeP/0mfSQoo8M47z/ALNQd8qAdtaX0h58ljzgCkEGcpfNDdn/
+      FLCQ6bfpvcXDINgk1+uGBgraIyFm87fc54Crh1CDLTOdg/OLNVnefrnceisY12uP
+      FvdF
+      -----END CERTIFICATE-----
+    key: |
+      -----BEGIN PRIVATE KEY-----
+      MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCloWgr7NlOvRyO
+      /1s9Eg9KVmew1otjt7sW+GjbbRQm0UgHEQHadx1lW9/V9HDny/YabwHZwsRrwW3/
+      ilLXSKeFGnvNI0SzwaDkYc0nyfZTXssb0lfxPELUYlFXfxZ0AXTepl2oBk18w/Ay
+      AL9oNS3MIgDlnN6nMdnTJyC3/edKnOjdu9OikN6kV2sjprep98IVHPE15hnIhmoI
+      8gKIqXlgmpWZdSoKLB5IvijTMkZQ3Nnv6MeB+mKlpWOmoS7XIMTIG8z8lUBeFl+M
+      EVpJA1STip5XVbS1rq6YxKAOGU/jtwuAQYbbbkMRA/8kVbBMt2hLaxV4U83WPz4Z
+      X/bJgVXdAgMBAAECggEAcO8jZn/ylBuiM2auQW/k+Rz9SrifBnkqmjj61lMD4Ivm
+      ftr71ohNhOUmNG6d5Y9O2StDqcWBxK95XzpjzeL+RmWOcItRtveZyt9c0XqF+Maz
+      2t6LlDMwpjv7lptTJfowQ/hP99eEUkQPrSiRWm6YMY4l6moR7xKwoacWSh5X7KkD
+      MCzJZi6vGZ6tSD5nGOPHr9tMrVdymQzFrri+REmUGWjE+T1h7iNdt+RabRm7slLj
+      K5kQSn4Py0QMG34AKC/rYuT8Q+MHXdUxTVGJ3CcBgzspQOj9rE7Y8te4BhVVcpep
+      I1EnpkcF16rEH3nvTfW2HphbBo9w8G+0N/fMfvSaCQKBgQDcdbTu1mPIkIzZq/f8
+      SfJRXy3f8ru/SDLUZ8iolbaFJt01VjsBPPwhJhVmPhbJ4lMU6XiO8eeTOnOKKfOs
+      LkZEQvGXAJsV8JqNud37qXt9jyciyYvnzXedIbN2M0ZTzBsiar9xs5XAgCOklm49
+      q4pfwMUDa/CwbQjMiVpR09jOOwKBgQDAVOpjrMUfeI1DpC+odmG3rpKFMw4fPTME
+      dolN3d4iEt7C+3oTSWG9NJzyAlU9afmCHuY2mDfIXVfesQQcIn/xTi1X+XAJIGeC
+      kKhbk8IyL1b6vuULJkRl13IUVpsNARaXBKbytJyNEZbI7NqcUyp3ZLKwCKNH8VmF
+      /lwf6HyyxwKBgGbKZxNZWOsiIto3KYgzfk1cgIpDpjB43GJXBaM9Mv4AcfG1hAt+
+      wNw/4ohqeLum0DAW78ROnDf0b/zCtL/aT57yS6ypdqYTKizctdjqXA7eGVRJ/vaU
+      wam9Fe0N2UOnDhvNA/hi0HcSCAxsq3gLrJgazIFc6buJCyo6/KbcjOETAoGBAK9N
+      No4/LTSwFmHuxpmPvSVEcrwBev+yMkwBFsjoTs1T0cJ6oBvwKKvhxqM2ySa+7vJQ
+      45gjScTQf4S0Z4CVWXRBw0aKTjmjVXVGEI3XsYs4ZtkJIY72BCWnJ42uGojR0xs2
+      3EwfnwldXMgqSl9t1ikYmV2lod2y99wPqTxUFUSFAoGACUBkP7fGqqK3YLiNIxJ/
+      TxBtGXXO+1hFy5DZeJa+4iK3oqnYgJr5rtPR8LIfNANILsPvknXoO/7zUR/d6ZnG
+      tcrO9LSlzOZolYK81V29cozf715QRtJFylUNuzZzy6b9bbPBr1yYQzDn01tGa1wk
+      neVXXMiEBz3yL2xRpWlxcS4=
+      -----END PRIVATE KEY-----
     signingKey: "ed25519 a_xxGM lIEH+RnSC5W80RoPQZPsjguFxxMs58pC5bsjbTJAB0w"

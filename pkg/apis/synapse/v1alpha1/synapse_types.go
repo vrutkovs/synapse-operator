@@ -7,24 +7,14 @@ import (
 // SynapseConfig contains homeserver configuration
 type SynapseConfig struct {
 	Homeserver string `json:"homeserver"`
-}
-
-// SynapseSecretsTLS contains secret keys for tls/ dir
-type SynapseSecretsTLS struct {
-	Cert string `json:"cert"`
-	Key  string `json:"key"`
-}
-
-// SynapseSecretsKeys contains secret keys for keys/ dir
-type SynapseSecretsKeys struct {
 	Logging    string `json:"logging"`
-	SigningKey string `json:"signingKey"`
 }
 
 // SynapseSecrets contains all secrets for synapse
 type SynapseSecrets struct {
-	TLS  SynapseSecretsTLS  `json:"tls"`
-	Keys SynapseSecretsKeys `json:"keys"`
+	Cert       string `json:"cert"`
+	Key        string `json:"key"`
+	SigningKey string `json:"signingKey"`
 }
 
 // SynapseSpec defines the desired state of Synapse

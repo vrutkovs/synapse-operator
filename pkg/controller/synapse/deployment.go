@@ -58,23 +58,9 @@ func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) [
 							Key:  "homeserver",
 							Path: "homeserver.yaml",
 						},
-					},
-				},
-			},
-		},
-		{
-			Name: "tls",
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: secretName,
-					Items: []corev1.KeyToPath{
 						{
-							Key:  "cert",
-							Path: "tls.crt",
-						},
-						{
-							Key:  "key",
-							Path: "tls.key",
+							Key:  "logging",
+							Path: cr.Spec.ServerName + ".log.config",
 						},
 					},
 				},
@@ -87,12 +73,16 @@ func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) [
 					SecretName: secretName,
 					Items: []corev1.KeyToPath{
 						{
-							Key:  "logging",
-							Path: cr.Spec.ServerName + ".log.config",
+							Key:  "signingKey",
+							Path: cr.Spec.ServerName + ".signing.key",
 						},
 						{
-							Key:  "tlsSigningKey",
-							Path: cr.Spec.ServerName + ".signing.key",
+							Key:  "cert",
+							Path: "tls.crt",
+						},
+						{
+							Key:  "key",
+							Path: "tls.key",
 						},
 					},
 				},
@@ -112,10 +102,6 @@ func getVolumeMounts() []corev1.VolumeMount {
 		{
 			Name:      "config",
 			MountPath: "/synapse/config",
-		},
-		{
-			Name:      "tls",
-			MountPath: "/synapse/tls",
 		},
 		{
 			Name:      "keys",
