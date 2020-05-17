@@ -11,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -114,12 +115,55 @@ func getVolumeMounts() []corev1.VolumeMount {
 	}
 }
 
+func getReadinessProbe() corev1.Probe {
+	return corev1.Probe{
+		InitialDelaySeconds: 10,
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   "/_matrix/client/versions",
+				Port:   intstr.FromString("http"),
+				Scheme: "HTTP",
+			},
+		},
+	}
+}
+
+func getLivenessProbe() corev1.Probe {
+	return corev1.Probe{
+		InitialDelaySeconds: 120,
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path:   "/_matrix/client/versions",
+				Port:   intstr.FromString("http"),
+				Scheme: "HTTP",
+			},
+		},
+	}
+}
+
+func getContainerPorts() []corev1.ContainerPort {
+	return []corev1.ContainerPort{
+		{
+			Name:          "http",
+			ContainerPort: 8008,
+			Protocol:      corev1.ProtocolTCP,
+		},
+		{
+			Name:          "https",
+			ContainerPort: 8448,
+			Protocol:      corev1.ProtocolTCP,
+		},
+	}
+}
+
 // newDeploymentForCR returns a busybox pod with the same name/namespace as the cr
 func newDeploymentForCR(cr *synapsev1alpha1.Synapse, secretName, configMapName, deploymentName string) *appsv1.Deployment {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
 	replicas := int32(1)
+	readinessProbe := getReadinessProbe()
+	livenessProbe := getLivenessProbe()
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
@@ -141,21 +185,12 @@ func newDeploymentForCR(cr *synapsev1alpha1.Synapse, secretName, configMapName, 
 					Volumes: getVolumes(cr, configMapName, secretName),
 					Containers: []corev1.Container{
 						{
-							Name:  "synapse",
-							Image: cr.Spec.Image,
-							Ports: []corev1.ContainerPort{
-								{
-									Name:          "http",
-									ContainerPort: 8008,
-									Protocol:      corev1.ProtocolTCP,
-								},
-								{
-									Name:          "https",
-									ContainerPort: 8448,
-									Protocol:      corev1.ProtocolTCP,
-								},
-							},
-							VolumeMounts: getVolumeMounts(),
+							Name:           "synapse",
+							Image:          cr.Spec.Image,
+							ReadinessProbe: &readinessProbe,
+							LivenessProbe:  &livenessProbe,
+							Ports:          getContainerPorts(),
+							VolumeMounts:   getVolumeMounts(),
 						},
 					},
 				},
