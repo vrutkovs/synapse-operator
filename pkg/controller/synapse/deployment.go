@@ -71,6 +71,12 @@ func deploymentNeedsUpdate(actual, expected *appsv1.DeploymentSpec, reqLogger lo
 		return true
 	}
 
+	// Strategy
+	if !reflect.DeepEqual(actual.Strategy, expected.Strategy) {
+		reqLogger.Info("Deployment strategy mismatch found", "actual", actual.Strategy, "expected", expected.Strategy)
+		return true
+	}
+
 	// Template Labels
 	if !reflect.DeepEqual(actual.Template.ObjectMeta.Labels, expected.Template.ObjectMeta.Labels) {
 		reqLogger.Info("Deployment label mismatch found", "actual", actual.Template.ObjectMeta.Labels, "expected", expected.Template.ObjectMeta.Labels)
@@ -303,6 +309,9 @@ func getExpectedDeploymentSpec(cr *synapsev1alpha1.Synapse) appsv1.DeploymentSpe
 
 	return appsv1.DeploymentSpec{
 		Replicas: &replicas,
+		Strategy: appsv1.DeploymentStrategy{
+			Type: appsv1.RecreateDeploymentStrategyType,
+		},
 		Selector: &metav1.LabelSelector{
 			MatchLabels: getDeploymentLabels(cr),
 		},
