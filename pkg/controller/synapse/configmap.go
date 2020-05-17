@@ -2,6 +2,7 @@ package synapse
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/go-logr/logr"
 	synapsev1alpha1 "github.com/vrutkovs/synapse-operator/pkg/apis/synapse/v1alpha1"
@@ -15,7 +16,6 @@ import (
 )
 
 func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instance *synapsev1alpha1.Synapse, reqLogger logr.Logger, configMapName string) (reconcile.Result, error) {
-	// Check if this ConfigMap already exists
 	configMap := newConfigMapForCR(instance, configMapName)
 
 	// Set Synapse instance as the owner and controller
@@ -23,6 +23,7 @@ func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instanc
 		return reconcile.Result{}, err
 	}
 
+	// Check if this ConfigMap already exists
 	found := &corev1.ConfigMap{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
@@ -35,12 +36,35 @@ func (r *ReconcileSynapse) reconcileConfigMap(request reconcile.Request, instanc
 		// ConfigMap created successfully - don't requeue
 		return reconcile.Result{}, nil
 	} else if err != nil {
-		return reconcile.Result{}, err
+		// Unknown error - requeue
+		reqLogger.Info("ConfigMap reconcile error", "ConfigMap.Namespace", found.Namespace, "ConfigMap.Name", found.Name, "Error", err)
+		return reconcile.Result{Requeue: true}, nil
+	} else if err == nil {
+		// Check if configmap fields haven't change
+		expectedData := getExpectedConfigmapData(instance)
+		if !reflect.DeepEqual(found.Data, expectedData) {
+			found.ObjectMeta = configMap.ObjectMeta
+			controllerutil.SetControllerReference(instance, found, r.scheme)
+			found.Data = expectedData
+			err = r.client.Update(context.TODO(), found)
+			if err != nil {
+				return reconcile.Result{Requeue: true}, err
+			}
+			reqLogger.Info("ConfigMap contents updated", "ConfigMap.Namespace", found.Namespace, "ConfigMap.Name", found.Name)
+			return reconcile.Result{}, nil
+		}
 	}
 
 	// ConfigMap already exists - don't requeue
 	reqLogger.Info("Skip reconcile: ConfigMap already exists", "ConfigMap.Namespace", found.Namespace, "ConfigMap.Name", found.Name)
 	return reconcile.Result{}, nil
+}
+
+func getExpectedConfigmapData(cr *synapsev1alpha1.Synapse) map[string]string {
+	return map[string]string{
+		"homeserver": cr.Spec.Config.Homeserver,
+		"logging":    cr.Spec.Config.Logging,
+	}
 }
 
 // newConfigMapForCR returns a busybox pod with the same name/namespace as the cr
@@ -54,9 +78,6 @@ func newConfigMapForCR(cr *synapsev1alpha1.Synapse, configMapName string) *corev
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},
-		Data: map[string]string{
-			"homeserver": cr.Spec.Config.Homeserver,
-			"logging":    cr.Spec.Config.Logging,
-		},
+		Data: getExpectedConfigmapData(cr),
 	}
 }

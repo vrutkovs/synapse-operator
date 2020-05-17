@@ -2,6 +2,7 @@ package synapse
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/go-logr/logr"
 	synapsev1alpha1 "github.com/vrutkovs/synapse-operator/pkg/apis/synapse/v1alpha1"
@@ -37,12 +38,52 @@ func (r *ReconcileSynapse) reconcileDeployment(request reconcile.Request, instan
 		// Deployment created successfully - don't requeue
 		return reconcile.Result{}, nil
 	} else if err != nil {
-		return reconcile.Result{}, err
+		// Unknown error - requeue
+		reqLogger.Info("Deployment reconcile error", "DeploymentDeployment.Namespace", found.Namespace, "Deployment.Name", found.Name, "Error", err)
+		return reconcile.Result{Requeue: true}, nil
+	} else if err == nil {
+		expectedSpec := getExpectedDeploymentSpec(instance, secretName, configMapName, deploymentName)
+		// Check if deployment needs to be updated
+		if deploymentNeedsUpdate(&found.Spec, &expectedSpec, reqLogger) {
+			found.ObjectMeta = deployment.ObjectMeta
+			controllerutil.SetControllerReference(instance, found, r.scheme)
+			found.Spec = expectedSpec
+			err = r.client.Update(context.TODO(), found)
+			if err != nil {
+				return reconcile.Result{Requeue: true}, err
+			}
+			reqLogger.Info("Deployment spec updated", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
+			return reconcile.Result{}, nil
+		}
 	}
 
 	// Deployment already exists - don't requeue
 	reqLogger.Info("Skip reconcile: Deployment already exists", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
 	return reconcile.Result{}, nil
+}
+
+func deploymentNeedsUpdate(actual, expected *appsv1.DeploymentSpec, reqLogger logr.Logger) bool {
+	// Replicas
+	if actual.Replicas != nil && expected.Replicas != nil && *actual.Replicas != *expected.Replicas {
+		reqLogger.Info("Deployment replicas mismatch found", "actual", actual.Replicas, "expected", expected.Replicas)
+		return true
+	}
+
+	// Template Labels
+	if !reflect.DeepEqual(actual.Template.ObjectMeta.Labels, expected.Template.ObjectMeta.Labels) {
+		reqLogger.Info("Deployment label mismatch found", "actual", actual.Template.ObjectMeta.Labels, "expected", expected.Template.ObjectMeta.Labels)
+		return true
+	}
+	// Template Spec Volumes
+	// Template Spec Containers length
+	// Template Spec Containers [0] Name
+	// Template Spec Containers [0] ReadinessProbe
+	// Template Spec Containers [0] LivenessProbe
+	// Template Spec Containers [0] Image
+	// Template Spec Containers [0] Ports
+	// Template Spec Containers [0] VolumeMounts
+
+	return false
 }
 
 func getVolumes(cr *synapsev1alpha1.Synapse, configMapName, secretName string) []corev1.Volume {
@@ -156,45 +197,54 @@ func getContainerPorts() []corev1.ContainerPort {
 	}
 }
 
-// newDeploymentForCR returns a busybox pod with the same name/namespace as the cr
-func newDeploymentForCR(cr *synapsev1alpha1.Synapse, secretName, configMapName, deploymentName string) *appsv1.Deployment {
-	labels := map[string]string{
+func getDeploymentLabels(cr *synapsev1alpha1.Synapse) map[string]string {
+	return map[string]string{
 		"app": cr.Name,
 	}
+}
+
+func getExpectedDeploymentSpec(cr *synapsev1alpha1.Synapse, secretName, configMapName, deploymentName string) appsv1.DeploymentSpec {
+
 	replicas := int32(1)
 	readinessProbe := getReadinessProbe()
 	livenessProbe := getLivenessProbe()
-	return &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      deploymentName,
-			Namespace: cr.Namespace,
-			Labels:    labels,
+
+	return appsv1.DeploymentSpec{
+		Replicas: &replicas,
+		Selector: &metav1.LabelSelector{
+			MatchLabels: getDeploymentLabels(cr),
 		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: &replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
+		Template: corev1.PodTemplateSpec{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      deploymentName + "-pod",
+				Namespace: cr.Namespace,
+				Labels:    getDeploymentLabels(cr),
 			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      deploymentName + "-pod",
-					Namespace: cr.Namespace,
-					Labels:    labels,
-				},
-				Spec: corev1.PodSpec{
-					Volumes: getVolumes(cr, configMapName, secretName),
-					Containers: []corev1.Container{
-						{
-							Name:           "synapse",
-							Image:          cr.Spec.Image,
-							ReadinessProbe: &readinessProbe,
-							LivenessProbe:  &livenessProbe,
-							Ports:          getContainerPorts(),
-							VolumeMounts:   getVolumeMounts(),
-						},
+			Spec: corev1.PodSpec{
+				Volumes: getVolumes(cr, configMapName, secretName),
+				Containers: []corev1.Container{
+					{
+						Name:           "synapse",
+						Image:          cr.Spec.Image,
+						ReadinessProbe: &readinessProbe,
+						LivenessProbe:  &livenessProbe,
+						Ports:          getContainerPorts(),
+						VolumeMounts:   getVolumeMounts(),
 					},
 				},
 			},
 		},
+	}
+}
+
+// newDeploymentForCR returns a busybox pod with the same name/namespace as the cr
+func newDeploymentForCR(cr *synapsev1alpha1.Synapse, secretName, configMapName, deploymentName string) *appsv1.Deployment {
+	return &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deploymentName,
+			Namespace: cr.Namespace,
+			Labels:    getDeploymentLabels(cr),
+		},
+		Spec: getExpectedDeploymentSpec(cr, secretName, configMapName, deploymentName),
 	}
 }
