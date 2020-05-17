@@ -91,7 +91,7 @@ type ReconcileRiot struct {
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileRiot) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling Synapse")
+	reqLogger.Info("Reconciling Riot")
 
 	// Fetch the Synapse instance
 	instance := &riotv1alpha1.Riot{}
