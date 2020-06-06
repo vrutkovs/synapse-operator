@@ -26,11 +26,16 @@ jobs:
       run: |
         /tmp/operator-sdk build quay.io/vrutkovs/synapse-operator:latest
 
+    - name: Unit tests
+      run: |
+        /tmp/operator-sdk test local ...
+
     - name: login to quay
       run: docker login -u vrutkovs -p $QUAY_PASSWORD quay.io
       env:
         QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
       if: github.event_name == 'push'
+
     - name: push the image
       run: docker push quay.io/vrutkovs/synapse-operator:latest
       if: github.event_name == 'push'
