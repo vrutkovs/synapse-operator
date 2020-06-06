@@ -73,6 +73,6 @@ func getService(t *testing.T, synapse *synapsev1alpha1.Synapse, cl client.Client
 func getDeployment(t *testing.T, synapse *synapsev1alpha1.Synapse, cl client.Client, ns string) *appsv1.Deployment {
 	dep := &appsv1.Deployment{}
 	err := cl.Get(context.TODO(), types.NamespacedName{Name: synapse.GetDeploymentName(), Namespace: ns}, dep)
-	g.Expect(err).NotTo(g.HaveOccurred(), "failed to get service")
+	g.Expect(err).NotTo(g.HaveOccurred(), "failed to get deployment")
 	return dep
 }
