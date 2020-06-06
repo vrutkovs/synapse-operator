@@ -19,3 +19,10 @@ func (s *Riot) GetDeploymentPodName() string {
 func (s *Riot) GetServiceName() string {
 	return s.ObjectMeta.Name + "-service"
 }
+
+// GetExpectedConfigmapData returns expected data stored in configmap
+func (s *Riot) GetExpectedConfigmapData() map[string]string {
+	return map[string]string{
+		"config.json": s.Spec.Config,
+	}
+}

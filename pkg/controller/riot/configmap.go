@@ -41,7 +41,7 @@ func (r *ReconcileRiot) reconcileConfigMap(request reconcile.Request, instance *
 		return reconcile.Result{Requeue: true}, false, nil
 	} else if err == nil {
 		// Check if configmap fields haven't change
-		expectedData := getExpectedConfigmapData(instance)
+		expectedData := instance.GetExpectedConfigmapData()
 		if !reflect.DeepEqual(found.Data, expectedData) {
 			found.ObjectMeta = configMap.ObjectMeta
 			controllerutil.SetControllerReference(instance, found, r.scheme)
@@ -60,13 +60,6 @@ func (r *ReconcileRiot) reconcileConfigMap(request reconcile.Request, instance *
 	return reconcile.Result{}, false, nil
 }
 
-// getExpectedConfigmapData returns expected data stored in configmap
-func getExpectedConfigmapData(cr *riotv1alphav1.Riot) map[string]string {
-	return map[string]string{
-		"config.json": cr.Spec.Config,
-	}
-}
-
 // newConfigMapForCR returns a busybox pod with the same name/namespace as the cr
 func newConfigMapForCR(cr *riotv1alphav1.Riot) *corev1.ConfigMap {
 	labels := map[string]string{
@@ -78,6 +71,6 @@ func newConfigMapForCR(cr *riotv1alphav1.Riot) *corev1.ConfigMap {
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},
-		Data: getExpectedConfigmapData(cr),
+		Data: cr.GetExpectedConfigmapData(),
 	}
 }
