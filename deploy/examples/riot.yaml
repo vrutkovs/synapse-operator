@@ -5,7 +5,6 @@ metadata:
 spec:
   replicas: 1
   image: "docker.io/vectorim/riot-web:v1.6.0"
-  configMountPath: "/"
   serverName: "matrix.apps.vrutkovs.devcluster.openshift.com"
   config: |
     {
