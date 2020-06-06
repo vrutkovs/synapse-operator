@@ -28,7 +28,7 @@ jobs:
 
     - name: Unit tests
       run: |
-        /tmp/operator-sdk test local ./...
+        /tmp/operator-sdk test local ./pkg/controller/
 
     - name: login to quay
       run: docker login -u vrutkovs -p $QUAY_PASSWORD quay.io

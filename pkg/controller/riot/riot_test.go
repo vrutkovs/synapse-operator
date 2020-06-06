@@ -2,6 +2,7 @@ package riot
 
 import (
 	"context"
+	"flag"
 	"reflect"
 	"testing"
 
@@ -14,6 +15,14 @@ import (
 	"k8s.io/kubectl/pkg/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+)
+
+// Handle operator-sdk flags so that unit tests could be run locally
+var (
+	namespacedMan      = flag.String("namespacedMan", "", "")
+	globalMan          = flag.String("globalMan", "", "")
+	root               = flag.String("root", "", "")
+	skipCleanupOnError = flag.Bool("skipCleanupOnError", false, "")
 )
 
 func TestRiotController(t *testing.T) {
