@@ -20,7 +20,7 @@ jobs:
         curl -L -o /tmp/operator-sdk "https://github.com/operator-framework/operator-sdk/releases/download/${RELEASE_VERSION}/operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu"
         chmod +x /tmp/operator-sdk
       env:
-        RELEASE_VERSION: v0.17.0
+        RELEASE_VERSION: v0.18.0
 
     - name: Build
       run: |
